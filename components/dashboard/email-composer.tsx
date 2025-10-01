@@ -149,7 +149,7 @@ export function EmailComposer({
   const { toast } = useToast()
 
   const editor = useEditor({
-    immediatelyRender:false,
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({
@@ -184,6 +184,26 @@ export function EmailComposer({
 
       return () => clearTimeout(timeoutId)
     },
+  })
+
+  useState(() => {
+    const savedTemplate = localStorage.getItem("selectedTemplate")
+    if (savedTemplate) {
+      try {
+        const template = JSON.parse(savedTemplate)
+        setSubject(template.subject)
+        if (editor) {
+          editor.commands.setContent(template.htmlContent)
+        }
+        localStorage.removeItem("selectedTemplate")
+        toast({
+          title: "Template loaded",
+          description: `"${template.name}" has been loaded into the editor.`,
+        })
+      } catch (error) {
+        console.error("Failed to load template:", error)
+      }
+    }
   })
 
   const handleCampaignSelect = (campaign: Campaign) => {

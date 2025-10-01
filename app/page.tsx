@@ -11,6 +11,7 @@ import { Analytics } from "@/components/dashboard/analytics"
 import Settings from "@/components/dashboard/settings"
 import Automation from "@/components/dashboard/automation"
 import { EmailComposer } from "@/components/dashboard/email-composer"
+import TemplatesPage from "./templates/page"
 
 interface Campaign {
   id: string
@@ -22,7 +23,7 @@ interface Campaign {
 }
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(true)
   const [activeSection, setActiveSection] = useState("overview")
 
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
@@ -81,7 +82,7 @@ export default function Home() {
       case "analytics":
         return <Analytics />
       case "templates":
-        return <div className="p-8 text-center text-muted-foreground">Templates - Coming Soon</div>
+        return <TemplatesPage />
       case "automation":
         return <Automation />
       case "settings":

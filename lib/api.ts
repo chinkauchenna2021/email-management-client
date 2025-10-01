@@ -1,3 +1,4 @@
+// api.ts
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
@@ -11,26 +12,23 @@ export const api = axios.create({
 });
 
 // Request interceptor to add the auth token
-import type { InternalAxiosRequestConfig } from 'axios';
-
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config) => {
     const token = useAuthStore.getState().token;
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error: any) => {
+  (error) => {
     return Promise.reject(error);
   }
 );
 
 // Response interceptor to handle auth errors
 api.interceptors.response.use(
-  (response: any) => response,
-  (error: any) => {
+  (response) => response,
+  (error) => {
     const originalRequest = error.config;
     
     // Handle 401 Unauthorized errors

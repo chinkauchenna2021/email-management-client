@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Suspense } from "react"
+import { AuthProvider } from "@/providers/AuthProvider"
 
 export const metadata: Metadata = {
   title: "EmailFlow - Advanced Email Management",
@@ -21,7 +22,9 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <Suspense>
-          {children}
+           <AuthProvider >
+               {children}
+           </AuthProvider>
           <Analytics />
         </Suspense>
       </body>

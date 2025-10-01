@@ -415,7 +415,7 @@ export default function Automation() {
           onClose={() => setIsCreateDialogOpen(false)}
           title="Create Automation Workflow"
           description="Set up an automated email sequence based on triggers and conditions"
-          size="large"
+          size="lg"
           isLoading={isLoading}
           loadingText="Creating workflow..."
         >
