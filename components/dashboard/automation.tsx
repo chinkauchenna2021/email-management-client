@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,8 @@ import {
   Shuffle,
   RotateCcw,
 } from "lucide-react"
+import { useAutomationStore } from "@/store/automationStore"
+import { ProtectedRoute } from "../auth/protected-route"
 
 interface AutomationWorkflow {
   id: string
@@ -191,6 +193,38 @@ export default function Automation() {
     triggerConditions: {},
     steps: [] as WorkflowStep[],
   })
+
+
+    const {
+    automations,
+    currentAutomation,
+    executions,
+    isLoading:loader,
+    error,
+    fetchAutomations,
+    createAutomation,
+    updateAutomation,
+    deleteAutomation,
+    getAutomation,
+    toggleAutomation,
+    scheduleAutomation,
+    setCurrentAutomation,
+    clearError
+  } = useAutomationStore();
+
+  useEffect(() => {
+    fetchAutomations();
+  }, []);
+
+  const handleCreateAutomation = async (automationData: any) => {
+    try {
+      await createAutomation(automationData);
+      // Show success message
+    } catch (error) {
+      // Show error message
+    }
+  };
+
 
   const workflowColumns = [
     {
@@ -398,6 +432,7 @@ export default function Automation() {
   )
 
   return (
+    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -773,5 +808,6 @@ export default function Automation() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoute>
   )
 }

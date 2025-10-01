@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { useTemplateStore } from "@/store/templateStore"
+import { ProtectedRoute } from "../auth/protected-route"
 
 interface EmailTemplate {
   id: string
@@ -158,6 +160,45 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const { toast } = useToast()
 
+
+
+ const {
+    templates,
+    currentTemplate,
+    categories:category,
+    isLoading,
+    error,
+    fetchTemplates,
+    createTemplate,
+    updateTemplate,
+    deleteTemplate,
+    getTemplate,
+    getTemplateCategories,
+    useTemplate,
+    setCurrentTemplate,
+    clearError
+  } = useTemplateStore();
+
+  useEffect(() => {
+    fetchTemplates();
+    getTemplateCategories();
+  }, []);
+
+  const handleCreateTemplate = async (templateData: any) => {
+    try {
+      await createTemplate(templateData);
+      // Show success message
+    } catch (error) {
+      // Show error message
+    }
+  };
+
+
+
+
+
+
+
   const filteredTemplates = mockTemplates.filter((template) => {
     const matchesCategory = selectedCategory === "all" || template.category === selectedCategory
     const matchesSearch =
@@ -191,6 +232,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
   }
 
   return (
+    <ProtectedRoute>
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
       <div className="border-b border-border p-6">
@@ -460,5 +502,6 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
         </DialogContent>
       </Dialog>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -54,6 +54,10 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useCampaignStore } from "@/store/campaignStore"
+import {  useEmailListStore } from "@/store/emailListStore"
+import { useTemplateStore } from "@/store/templateStore"
+import { ProtectedRoute } from "../auth/protected-route"
 
 interface Campaign {
   id: string
@@ -147,6 +151,26 @@ export function EmailComposer({
   const [imageUrl, setImageUrl] = useState("")
   const [imageAlt, setImageAlt] = useState("")
   const { toast } = useToast()
+
+
+
+  const { createCampaign } = useCampaignStore();
+  const { emailLists } = useEmailListStore();
+  const { templates } = useTemplateStore();
+
+  const handleSendCampaign = async (campaignData: any) => {
+    try {
+      await createCampaign(campaignData);
+      // Show success message
+    } catch (error) {
+      // Show error message
+    }
+  };
+
+
+
+
+
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -412,6 +436,7 @@ export function EmailComposer({
   }
 
   return (
+    <ProtectedRoute>
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
       <div className="border-b border-border p-6">
@@ -910,5 +935,6 @@ export function EmailComposer({
         </DialogContent>
       </Dialog>
     </div>
+    </ProtectedRoute>
   )
 }

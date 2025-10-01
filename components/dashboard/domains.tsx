@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,8 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react"
+import { useDomainStore } from "@/store/domainStore"
+import { ProtectedRoute } from "../auth/protected-route"
 
 const domains = [
   {
@@ -157,6 +159,51 @@ export function Domains() {
   const [showPassword, setShowPassword] = useState(false)
   const [isTestingConnection, setIsTestingConnection] = useState(false)
 
+
+
+
+
+  // New domain data
+
+    const {
+    domains:domain,
+    currentDomain,
+    isLoading,
+    error,
+    fetchDomains,
+    addDomain,
+    updateDomain,
+    deleteDomain,
+    verifyDomain,
+    testSmtpSettings,
+    getDomainStats,
+    setCurrentDomain,
+    clearError
+  } = useDomainStore();
+
+  useEffect(() => {
+    fetchDomains();
+  }, []);
+
+  const handleAddDomain = async (domain: string, smtpSettings: any) => {
+    try {
+      await addDomain(domain, smtpSettings);
+      // Show success message
+    } catch (error) {
+      // Show error message
+    }
+  };
+
+
+
+
+
+
+
+
+
+
+
   const [smtpForm, setSmtpForm] = useState({
     provider: "custom",
     host: "",
@@ -234,6 +281,7 @@ export function Domains() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -304,7 +352,7 @@ export function Domains() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Emails Today</p>
                 <p className="text-2xl font-bold">
-                  {domains.reduce((sum, d) => sum + d.smtpConfig.sentToday, 0).toLocaleString()}
+                  {domains.reduce((sum, d) => sum + d?.smtpConfig.sentToday, 0).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -855,5 +903,6 @@ export function Domains() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoute>
   )
 }

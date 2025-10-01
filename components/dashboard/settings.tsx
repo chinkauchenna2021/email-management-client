@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -41,6 +41,8 @@ import {
   CheckCircle,
   SettingsIcon,
 } from "lucide-react"
+import { useSettingsStore } from "@/store/settingsStore"
+import { ProtectedRoute } from "../auth/protected-route"
 
 interface UserProfile {
   name: string
@@ -83,6 +85,37 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState("account")
   const [showApiKey, setShowApiKey] = useState<string | null>(null)
   const [isGeneratingKey, setIsGeneratingKey] = useState(false)
+
+
+
+
+
+
+    const {
+    userSettings,
+    appSettings,
+    isLoading,
+    error,
+    fetchUserSettings,
+    fetchAppSettings,
+    updateUserSettings,
+    clearError
+  } = useSettingsStore();
+
+  useEffect(() => {
+    fetchUserSettings();
+    fetchAppSettings();
+  }, []);
+
+  const handleUpdateSettings = async (settings: any) => {
+    try {
+      await updateUserSettings(settings);
+      // Show success message
+    } catch (error) {
+      // Show error message
+    }
+  };
+
 
   // State for different settings sections
   const [profile, setProfile] = useState<UserProfile>({
@@ -195,6 +228,7 @@ export default function Settings() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <SettingsIcon className="h-6 w-6" />
@@ -714,5 +748,6 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
     </div>
+    </ProtectedRoute>
   )
 }

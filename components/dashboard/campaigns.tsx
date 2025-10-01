@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,6 +36,11 @@ import {
   Settings,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDomainStore } from "@/store/domainStore"
+import { useEmailListStore } from "@/store/emailListStore"
+import { useTemplateStore } from "@/store/templateStore"
+import { useCampaignStore } from "@/store/campaignStore"
+import { ProtectedRoute } from "../auth/protected-route"
 
 const campaigns = [
   {
@@ -126,6 +131,59 @@ export function Campaigns() {
     list: "",
     scheduledDate: undefined as Date | undefined,
   })
+
+
+
+  const {
+    campaigns:campaign,
+    currentCampaign,
+    campaignStats,
+    isLoading:loader,
+    error,
+    fetchCampaigns,
+    createCampaign,
+    updateCampaign,
+    deleteCampaign,
+    sendCampaign,
+    getCampaignDetails,
+    getCampaignStats,
+    getOverallCampaignStats,
+    retryFailedEmails,
+    setCurrentCampaign,
+    clearError
+  } = useCampaignStore();
+
+  const { domains } = useDomainStore();
+  const { emailLists } = useEmailListStore();
+  const { templates } = useTemplateStore();
+
+  useEffect(() => {
+    fetchCampaigns();
+    getOverallCampaignStats();
+  }, []);
+
+  const handleCreateCampaign = async (campaignData: any) => {
+    try {
+      await createCampaign(campaignData);
+      // Show success message
+    } catch (error) {
+      // Show error message
+    }
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const campaignColumns = [
     {
@@ -291,24 +349,24 @@ export function Campaigns() {
     setIsLoading(false)
   }
 
-  const handleCreateCampaign = async () => {
-    setIsLoading(true)
-    console.log("[v0] Creating campaign:", newCampaign)
+  // const handleCreateCampaign = async () => {
+  //   setIsLoading(true)
+  //   console.log("[v0] Creating campaign:", newCampaign)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+  //   // Simulate API call
+  //   await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    setIsCreateDialogOpen(false)
-    setNewCampaign({
-      name: "",
-      subject: "",
-      content: "",
-      domain: "",
-      list: "",
-      scheduledDate: undefined,
-    })
-    setIsLoading(false)
-  }
+  //   setIsCreateDialogOpen(false)
+  //   setNewCampaign({
+  //     name: "",
+  //     subject: "",
+  //     content: "",
+  //     domain: "",
+  //     list: "",
+  //     scheduledDate: undefined,
+  //   })
+  //   setIsLoading(false)
+  // }
 
   const handleTemplateSelect = (template: any) => {
     setNewCampaign({
@@ -373,6 +431,7 @@ export function Campaigns() {
   )
 
   return (
+    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -635,5 +694,6 @@ export function Campaigns() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoute>
   )
 }

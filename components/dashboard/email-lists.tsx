@@ -37,6 +37,8 @@ import {
   Eye,
   FileText,
 } from "lucide-react"
+import { ProtectedRoute } from "../auth/protected-route"
+import { useEmailListStore } from '@/store/emailListStore';
 
 const emailLists = [
   {
@@ -128,6 +130,50 @@ export function EmailLists() {
     
     return { status: 'valid' }
   }
+
+
+
+
+
+
+
+
+
+    const {
+    emailLists,
+    currentList,
+    emails,
+    isLoading,
+    error,
+    fetchEmailLists,
+    createEmailList,
+    updateEmailList,
+    deleteEmailList,
+    getEmailListWithStats,
+    getAllEmailListsWithStats,
+    addEmailsToList,
+    getEmailsInList,
+    validateEmailBatch,
+    setCurrentList,
+    clearError
+  } = useEmailListStore();
+
+  useEffect(() => {
+    fetchEmailLists();
+  }, []);
+
+  const handleCreateEmailList = async (name: string, description?: string, emails: string[] = []) => {
+    try {
+      await createEmailList(name, description, emails);
+      // Show success message
+    } catch (error) {
+      // Show error message
+    }
+  };
+
+
+
+
 
   // Handle email input with real-time validation
   const handleEmailInput = (value: string) => {
@@ -278,8 +324,8 @@ export function EmailLists() {
 
   const filteredLists = emailLists.filter(
     (list) =>
-      list.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      list.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      String(list?.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(list?.description).toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   // Focus textarea when dialog opens
@@ -292,6 +338,7 @@ export function EmailLists() {
   }, [isUploadDialogOpen])
 
   return (
+    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -591,7 +638,7 @@ export function EmailLists() {
 
       {/* Lists Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLists.map((list) => (
+        {filteredLists.map((list:any) => (
           <Card key={list.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -633,7 +680,7 @@ export function EmailLists() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                {getStatusBadge(list.status)}
+                {getStatusBadge(list?.status)}
               </div>
 
               <div className="space-y-2">
@@ -760,5 +807,6 @@ export function EmailLists() {
         </AlertDescription>
       </Alert>
     </div>
+    </ProtectedRoute>
   )
 }
