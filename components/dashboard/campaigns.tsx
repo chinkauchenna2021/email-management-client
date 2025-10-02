@@ -40,7 +40,6 @@ import { useDomainStore } from "@/store/domainStore"
 import { useEmailListStore } from "@/store/emailListStore"
 import { useTemplateStore } from "@/store/templateStore"
 import { useCampaignStore } from "@/store/campaignStore"
-import { ProtectedRoute } from "../auth/protected-route"
 
 const campaigns = [
   {
@@ -431,7 +430,6 @@ export function Campaigns() {
   )
 
   return (
-    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -694,6 +692,5 @@ export function Campaigns() {
         </CardContent>
       </Card>
     </div>
-    </ProtectedRoute>
   )
 }

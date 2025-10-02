@@ -43,7 +43,6 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { useAutomationStore } from "@/store/automationStore"
-import { ProtectedRoute } from "../auth/protected-route"
 
 interface AutomationWorkflow {
   id: string
@@ -432,7 +431,6 @@ export default function Automation() {
   )
 
   return (
-    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -808,6 +806,5 @@ export default function Automation() {
         </CardContent>
       </Card>
     </div>
-    </ProtectedRoute>
   )
 }

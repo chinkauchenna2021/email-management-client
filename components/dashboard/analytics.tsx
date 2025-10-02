@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { AwaitedReactNode, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -25,69 +25,85 @@ import {
 } from "recharts"
 import { TrendingUp, TrendingDown, Mail, Eye, MousePointer, AlertTriangle, Download, Activity } from "lucide-react"
 
-const performanceData = [
-  { month: "Jan", sent: 45000, delivered: 43200, opened: 12960, clicked: 2592, bounced: 1800, unsubscribed: 180 },
-  { month: "Feb", sent: 52000, delivered: 50440, opened: 15132, clicked: 3022, bounced: 1560, unsubscribed: 208 },
-  { month: "Mar", sent: 48000, delivered: 46560, opened: 13968, clicked: 2794, bounced: 1440, unsubscribed: 192 },
-  { month: "Apr", sent: 61000, delivered: 59170, opened: 17751, clicked: 3550, bounced: 1830, unsubscribed: 244 },
-  { month: "May", sent: 55000, delivered: 53350, opened: 16005, clicked: 3201, bounced: 1650, unsubscribed: 220 },
-  { month: "Jun", sent: 67000, delivered: 65030, opened: 19509, clicked: 3902, bounced: 1970, unsubscribed: 268 },
-]
-
-const campaignPerformance = [
-  {
-    name: "Summer Sale 2024",
-    sent: 15420,
-    opened: 8234,
-    clicked: 1876,
-    openRate: 53.4,
-    clickRate: 12.2,
-    revenue: 45600,
-  },
-  { name: "Product Launch", sent: 8500, opened: 3400, clicked: 680, openRate: 40.0, clickRate: 8.0, revenue: 28900 },
-  { name: "Newsletter #47", sent: 15420, opened: 4626, clicked: 925, openRate: 30.0, clickRate: 6.0, revenue: 12300 },
-  { name: "Welcome Series", sent: 2100, opened: 1260, clicked: 315, openRate: 60.0, clickRate: 15.0, revenue: 8700 },
-  { name: "Re-engagement", sent: 5432, opened: 1630, clicked: 272, openRate: 30.0, clickRate: 5.0, revenue: 5400 },
-]
-
-const deviceData = [
-  { name: "Desktop", value: 45, color: "hsl(var(--chart-1))" },
-  { name: "Mobile", value: 38, color: "hsl(var(--chart-2))" },
-  { name: "Tablet", value: 17, color: "hsl(var(--chart-3))" },
-]
-
-const timeData = [
-  { hour: "6 AM", opens: 120, clicks: 24 },
-  { hour: "8 AM", opens: 340, clicks: 68 },
-  { hour: "10 AM", opens: 580, clicks: 116 },
-  { hour: "12 PM", opens: 720, clicks: 144 },
-  { hour: "2 PM", opens: 650, clicks: 130 },
-  { hour: "4 PM", opens: 480, clicks: 96 },
-  { hour: "6 PM", opens: 380, clicks: 76 },
-  { hour: "8 PM", opens: 290, clicks: 58 },
-]
-
-const domainReputation = [
-  { domain: "company.com", reputation: 95, emails: 45000, deliverability: 98.2 },
-  { domain: "marketing.company.com", reputation: 78, emails: 28000, deliverability: 94.5 },
-  { domain: "promo.company.com", reputation: 45, emails: 12000, deliverability: 78.3 },
-]
+// Import our hooks
+import { 
+  useAnalyticsMetrics, 
+  useAnalyticsPerformance, 
+  useAnalyticsDevices, 
+  useAnalyticsTiming, 
+  useAnalyticsDomains, 
+  useAnalyticsCampaigns 
+} from "@/hooks/useAnalytics"
 
 export function Analytics() {
   const [timeRange, setTimeRange] = useState("6months")
   const [selectedMetric, setSelectedMetric] = useState("all")
 
-  const totalSent = performanceData.reduce((sum, month) => sum + month.sent, 0)
-  const totalDelivered = performanceData.reduce((sum, month) => sum + month.delivered, 0)
-  const totalOpened = performanceData.reduce((sum, month) => sum + month.opened, 0)
-  const totalClicked = performanceData.reduce((sum, month) => sum + month.clicked, 0)
-  const totalBounced = performanceData.reduce((sum, month) => sum + month.bounced, 0)
-  const totalUnsubscribed = performanceData.reduce((sum, month) => sum + month.unsubscribed, 0)
+  // Fetch data using our hooks
+  const { data: metrics, isLoading: metricsLoading, error: metricsError } = useAnalyticsMetrics()
+  const { data: performanceData, isLoading: performanceLoading } = useAnalyticsPerformance(timeRange)
+  const { data: deviceData, isLoading: devicesLoading } = useAnalyticsDevices()
+  const { data: timeData, isLoading: timingLoading } = useAnalyticsTiming()
+  const { data: domainReputation, isLoading: domainsLoading } = useAnalyticsDomains()
+  const { data: campaignPerformance, isLoading: campaignsLoading } = useAnalyticsCampaigns()
 
-  const avgOpenRate = ((totalOpened / totalDelivered) * 100).toFixed(1)
-  const avgClickRate = ((totalClicked / totalDelivered) * 100).toFixed(1)
-  const avgBounceRate = ((totalBounced / totalSent) * 100).toFixed(1)
-  const avgUnsubscribeRate = ((totalUnsubscribed / totalDelivered) * 100).toFixed(1)
+  // Calculate derived values from metrics
+  const totalSent = metrics?.totalSent || 0
+  const totalDelivered = metrics?.delivered || 0
+  const totalOpened = metrics?.opened || 0
+  const totalClicked = metrics?.clicked || 0
+  const totalBounced = metrics?.bounced || 0
+  const totalUnsubscribed = metrics?.unsubscribed || 0
+
+  const avgOpenRate = metrics?.openRate || 0
+  const avgClickRate = metrics?.clickRate || 0
+  const avgBounceRate = metrics?.bounceRate || 0
+  const avgUnsubscribeRate = metrics?.unsubscribeRate || 0
+
+  // Show loading state
+  if (metricsLoading || performanceLoading || devicesLoading || timingLoading || domainsLoading || campaignsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+            <p className="text-muted-foreground">Comprehensive insights into your email campaign performance</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="h-8 bg-muted rounded animate-pulse"></div>
+                <div className="mt-2 h-6 bg-muted rounded animate-pulse"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (metricsError || !performanceData ) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+            <p className="text-muted-foreground">Comprehensive insights into your email campaign performance</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-red-500">Failed to load analytics data. Please try again later.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -246,7 +262,7 @@ export function Analytics() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {deviceData.map((entry, index) => (
+                  {deviceData.map((entry: { color: string | undefined }, index: any) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -254,7 +270,7 @@ export function Analytics() {
               </PieChart>
             </ResponsiveContainer>
             <div className="flex justify-center space-x-6 mt-4">
-              {deviceData.map((device, index) => (
+              {deviceData.map((device: { color: any; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; value: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined }, index: Key | null | undefined) => (
                 <div key={index} className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: device.color }} />
                   <span className="text-sm text-muted-foreground">
@@ -295,7 +311,7 @@ export function Analytics() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {campaignPerformance.map((campaign, index) => (
+                  {campaignPerformance?.map((campaign: { name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; sent: { toLocaleString: () => string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined }; openRate: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<AwaitedReactNode> | null | undefined; clickRate: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<AwaitedReactNode> | null | undefined; revenue: { toLocaleString: () => string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined } }, index: Key | null | undefined) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{campaign.name}</TableCell>
                       <TableCell>{campaign.sent.toLocaleString()}</TableCell>
@@ -305,7 +321,7 @@ export function Analytics() {
                           <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full bg-chart-1"
-                              style={{ width: `${Math.min(campaign.openRate, 100)}%` }}
+                              style={{ width: `${Math.min(Number(campaign.openRate), 100)}%` }}
                             />
                           </div>
                         </div>
@@ -316,7 +332,7 @@ export function Analytics() {
                           <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full bg-chart-2"
-                              style={{ width: `${Math.min(campaign.clickRate * 5, 100)}%` }}
+                              style={{ width: `${Math.min(Number(campaign.clickRate) * 5, 100)}%` }}
                             />
                           </div>
                         </div>
@@ -325,17 +341,17 @@ export function Analytics() {
                       <TableCell>
                         <Badge
                           variant={
-                            campaign.openRate > 40 ? "default" : campaign.openRate > 25 ? "secondary" : "outline"
+                            Number(campaign.openRate) > 40 ? "default" : Number(campaign.openRate) > 25 ? "secondary" : "outline"
                           }
                           className={
-                            campaign.openRate > 40
+                            Number(campaign.openRate) > 40
                               ? "bg-green-500/10 text-green-500"
-                              : campaign.openRate > 25
+                              : Number(campaign.openRate) > 25
                                 ? "bg-yellow-500/10 text-yellow-500"
                                 : "bg-red-500/10 text-red-500"
                           }
                         >
-                          {campaign.openRate > 40 ? "Excellent" : campaign.openRate > 25 ? "Good" : "Needs Work"}
+                          {Number(campaign.openRate) > 40 ? "Excellent" : Number(campaign.openRate) > 25 ? "Good" : "Needs Work"}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -381,7 +397,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {domainReputation.map((domain, index) => (
+                {domainReputation?.map((domain: { domain: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; emails: { toLocaleString: () => string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined }; reputation: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<AwaitedReactNode> | null | undefined; deliverability: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined }, index: Key | null | undefined) => (
                   <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -402,16 +418,16 @@ export function Analytics() {
                         <p className="text-xs text-muted-foreground">Deliverability</p>
                       </div>
                       <Badge
-                        variant={domain.reputation > 80 ? "default" : domain.reputation > 60 ? "secondary" : "outline"}
+                        variant={Number(domain.reputation) > 80 ? "default" : Number(domain.reputation) > 60 ? "secondary" : "outline"}
                         className={
-                          domain.reputation > 80
+                          Number(domain.reputation) > 80
                             ? "bg-green-500/10 text-green-500"
-                            : domain.reputation > 60
+                            : Number(domain.reputation) > 60
                               ? "bg-yellow-500/10 text-yellow-500"
                               : "bg-red-500/10 text-red-500"
                         }
                       >
-                        {domain.reputation > 80 ? "Excellent" : domain.reputation > 60 ? "Good" : "Poor"}
+                        {Number(domain.reputation) > 80 ? "Excellent" : Number(domain.reputation) > 60 ? "Good" : "Poor"}
                       </Badge>
                     </div>
                   </div>

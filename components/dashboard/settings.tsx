@@ -42,7 +42,6 @@ import {
   SettingsIcon,
 } from "lucide-react"
 import { useSettingsStore } from "@/store/settingsStore"
-import { ProtectedRoute } from "../auth/protected-route"
 
 interface UserProfile {
   name: string
@@ -228,7 +227,6 @@ export default function Settings() {
   }
 
   return (
-    <ProtectedRoute>
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <SettingsIcon className="h-6 w-6" />
@@ -748,6 +746,5 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
     </div>
-    </ProtectedRoute>
   )
 }

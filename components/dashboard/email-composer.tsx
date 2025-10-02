@@ -57,7 +57,7 @@ import { cn } from "@/lib/utils"
 import { useCampaignStore } from "@/store/campaignStore"
 import {  useEmailListStore } from "@/store/emailListStore"
 import { useTemplateStore } from "@/store/templateStore"
-import { ProtectedRoute } from "../auth/protected-route"
+
 
 interface Campaign {
   id: string
@@ -436,7 +436,6 @@ export function EmailComposer({
   }
 
   return (
-    <ProtectedRoute>
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
       <div className="border-b border-border p-6">
@@ -935,6 +934,5 @@ export function EmailComposer({
         </DialogContent>
       </Dialog>
     </div>
-    </ProtectedRoute>
   )
 }

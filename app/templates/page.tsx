@@ -1,5 +1,6 @@
 "use client"
 
+import { ProtectedRoute } from "@/components/auth/protected-route"
 import { EmailTemplates } from "@/components/dashboard/email-templates"
 import { useRouter } from "next/navigation"
 
@@ -15,8 +16,10 @@ export default function TemplatesPage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-background dark">
       <EmailTemplates onSelectTemplate={handleSelectTemplate} />
     </div>
+    </ProtectedRoute>
   )
 }

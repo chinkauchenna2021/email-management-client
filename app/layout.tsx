@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Suspense } from "react"
 import { AuthProvider } from "@/providers/AuthProvider"
+import { QueryProvider } from '@/providers/query-provider'
 
 export const metadata: Metadata = {
   title: "EmailFlow - Advanced Email Management",
@@ -23,7 +24,9 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <Suspense>
            <AuthProvider >
+            <QueryProvider>
                {children}
+            </QueryProvider>
            </AuthProvider>
           <Analytics />
         </Suspense>

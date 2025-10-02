@@ -40,6 +40,13 @@ import {
   Shield,
 } from "lucide-react"
 
+// Import our hooks
+import { 
+  useMonitoringMetrics, 
+  useMonitoringJobs, 
+  useMonitoringJob 
+} from "@/hooks/useMonitoring"
+
 interface EmailJob {
   id: string
   name: string
@@ -78,86 +85,8 @@ interface EmailMetrics {
   complaintRate: number
 }
 
-const mockJobs: EmailJob[] = [
-  {
-    id: "1",
-    name: "Newsletter Campaign #47",
-    type: "campaign",
-    status: "running",
-    progress: 65,
-    totalEmails: 15420,
-    processed: 10023,
-    successful: 9876,
-    failed: 147,
-    bounced: 234,
-    opened: 4567,
-    clicked: 1234,
-    unsubscribed: 23,
-    startedAt: "2024-03-20T10:30:00Z",
-    estimatedCompletion: "2024-03-20T11:45:00Z",
-    throughput: 125,
-    errorRate: 1.5,
-    settings: { throttle: 100, retries: 3 },
-  },
-  {
-    id: "2",
-    name: "Product Launch Validation",
-    type: "validation",
-    status: "completed",
-    progress: 100,
-    totalEmails: 8234,
-    processed: 8234,
-    successful: 8100,
-    failed: 134,
-    bounced: 0,
-    opened: 0,
-    clicked: 0,
-    unsubscribed: 0,
-    startedAt: "2024-03-20T09:15:00Z",
-    completedAt: "2024-03-20T09:45:00Z",
-    throughput: 275,
-    errorRate: 1.6,
-    settings: { timeout: 30, concurrent: 10 },
-  },
-  {
-    id: "3",
-    name: "Customer List Import",
-    type: "import",
-    status: "paused",
-    progress: 45,
-    totalEmails: 25000,
-    processed: 11250,
-    successful: 10980,
-    failed: 270,
-    bounced: 0,
-    opened: 0,
-    clicked: 0,
-    unsubscribed: 0,
-    startedAt: "2024-03-20T08:00:00Z",
-    throughput: 200,
-    errorRate: 2.4,
-    settings: { batchSize: 500, validateOnImport: true },
-  },
-]
-
-const mockMetrics: EmailMetrics = {
-  totalSent: 125430,
-  delivered: 119876,
-  bounced: 5554,
-  opened: 48765,
-  clicked: 12543,
-  unsubscribed: 876,
-  complained: 234,
-  deliveryRate: 95.6,
-  openRate: 40.7,
-  clickRate: 10.5,
-  bounceRate: 4.4,
-  unsubscribeRate: 0.7,
-  complaintRate: 0.2,
-}
-
 export function EmailMonitoring() {
-  const [jobs, setJobs] = useState<EmailJob[]>(mockJobs)
+  const [jobs, setJobs] = useState<EmailJob[]>([])
   const [selectedJob, setSelectedJob] = useState<EmailJob | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
@@ -173,6 +102,26 @@ export function EmailMonitoring() {
 
   const { openModal } = useModal()
   const createProgress = useProgress()
+
+  // Fetch metrics data
+  const { data: metrics } = useMonitoringMetrics()
+  
+  // Fetch jobs data with real-time updates
+  const { data: fetchedJobs } = useMonitoringJobs({
+    status: filterStatus !== "all" ? filterStatus : undefined,
+    type: filterType !== "all" ? filterType : undefined,
+    search: searchTerm || undefined,
+  })
+
+  // Fetch job details when selected
+  const { data: jobDetails } = useMonitoringJob(selectedJob?.id || '')
+
+  // Update jobs when fetched data changes
+  useEffect(() => {
+    if (fetchedJobs) {
+      setJobs(fetchedJobs)
+    }
+  }, [fetchedJobs])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -306,32 +255,6 @@ export function EmailMonitoring() {
     return matchesSearch && matchesStatus && matchesType
   })
 
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setJobs((prev) =>
-        prev.map((job) => {
-          if (job.status === "running" && job.progress < 100) {
-            const newProgress = Math.min(job.progress + Math.random() * 5, 100)
-            const newProcessed = Math.floor((newProgress / 100) * job.totalEmails)
-            return {
-              ...job,
-              progress: newProgress,
-              processed: newProcessed,
-              successful: Math.floor(newProcessed * 0.95),
-              failed: Math.floor(newProcessed * 0.05),
-              status: newProgress >= 100 ? ("completed" as const) : job.status,
-              completedAt: newProgress >= 100 ? new Date().toISOString() : job.completedAt,
-            }
-          }
-          return job
-        }),
-      )
-    }, 2000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -359,7 +282,7 @@ export function EmailMonitoring() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Delivery Rate</p>
-                <p className="text-2xl font-bold text-green-600">{mockMetrics.deliveryRate}%</p>
+                <p className="text-2xl font-bold text-green-600">{metrics?.deliveryRate || 0}%</p>
                 <div className="flex items-center mt-1">
                   <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
                   <span className="text-xs text-green-500">+2.3% from last week</span>
@@ -375,7 +298,7 @@ export function EmailMonitoring() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Open Rate</p>
-                <p className="text-2xl font-bold text-blue-600">{mockMetrics.openRate}%</p>
+                <p className="text-2xl font-bold text-blue-600">{metrics?.openRate || 0}%</p>
                 <div className="flex items-center mt-1">
                   <TrendingUp className="w-3 h-3 text-blue-500 mr-1" />
                   <span className="text-xs text-blue-500">+1.8% from last week</span>
@@ -391,7 +314,7 @@ export function EmailMonitoring() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Click Rate</p>
-                <p className="text-2xl font-bold text-purple-600">{mockMetrics.clickRate}%</p>
+                <p className="text-2xl font-bold text-purple-600">{metrics?.clickRate || 0}%</p>
                 <div className="flex items-center mt-1">
                   <TrendingDown className="w-3 h-3 text-red-500 mr-1" />
                   <span className="text-xs text-red-500">-0.5% from last week</span>
@@ -407,7 +330,7 @@ export function EmailMonitoring() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Bounce Rate</p>
-                <p className="text-2xl font-bold text-orange-600">{mockMetrics.bounceRate}%</p>
+                <p className="text-2xl font-bold text-orange-600">{metrics?.bounceRate || 0}%</p>
                 <div className="flex items-center mt-1">
                   <TrendingDown className="w-3 h-3 text-green-500 mr-1" />
                   <span className="text-xs text-green-500">-0.8% from last week</span>

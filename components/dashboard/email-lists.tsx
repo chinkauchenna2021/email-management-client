@@ -37,7 +37,6 @@ import {
   Eye,
   FileText,
 } from "lucide-react"
-import { ProtectedRoute } from "../auth/protected-route"
 import { useEmailListStore } from '@/store/emailListStore';
 
 const emailLists = [
@@ -338,7 +337,6 @@ export function EmailLists() {
   }, [isUploadDialogOpen])
 
   return (
-    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -807,6 +805,5 @@ export function EmailLists() {
         </AlertDescription>
       </Alert>
     </div>
-    </ProtectedRoute>
   )
 }

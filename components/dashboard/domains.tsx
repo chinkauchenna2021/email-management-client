@@ -43,7 +43,7 @@ import {
   EyeOff,
 } from "lucide-react"
 import { useDomainStore } from "@/store/domainStore"
-import { ProtectedRoute } from "../auth/protected-route"
+
 
 const domains = [
   {
@@ -281,7 +281,6 @@ export function Domains() {
   }
 
   return (
-    <ProtectedRoute>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -903,6 +902,5 @@ export function Domains() {
         </CardContent>
       </Card>
     </div>
-    </ProtectedRoute>
   )
 }

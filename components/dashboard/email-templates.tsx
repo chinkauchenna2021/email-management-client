@@ -26,7 +26,6 @@ import {
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { useTemplateStore } from "@/store/templateStore"
-import { ProtectedRoute } from "../auth/protected-route"
 
 interface EmailTemplate {
   id: string
@@ -232,7 +231,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
   }
 
   return (
-    <ProtectedRoute>
+
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
       <div className="border-b border-border p-6">
@@ -502,6 +501,5 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
         </DialogContent>
       </Dialog>
     </div>
-    </ProtectedRoute>
   )
 }
