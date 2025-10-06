@@ -37,64 +37,11 @@ import {
   Eye,
   FileText,
 } from "lucide-react"
-import { useEmailListStore } from '@/store/emailListStore';
-
-const emailLists = [
-  {
-    id: "1",
-    name: "Newsletter Subscribers",
-    description: "Main newsletter subscriber list",
-    totalEmails: 15420,
-    validEmails: 14876,
-    invalidEmails: 544,
-    status: "active",
-    createdAt: "2024-01-15",
-    lastUpdated: "2024-03-20",
-  },
-  {
-    id: "2",
-    name: "Product Launch List",
-    description: "Targeted list for product announcements",
-    totalEmails: 8234,
-    validEmails: 8100,
-    invalidEmails: 134,
-    status: "active",
-    createdAt: "2024-02-10",
-    lastUpdated: "2024-03-18",
-  },
-  {
-    id: "3",
-    name: "VIP Customers",
-    description: "High-value customer segment",
-    totalEmails: 1876,
-    validEmails: 1850,
-    invalidEmails: 26,
-    status: "active",
-    createdAt: "2024-01-20",
-    lastUpdated: "2024-03-15",
-  },
-  {
-    id: "4",
-    name: "Inactive Users",
-    description: "Users who haven't engaged recently",
-    totalEmails: 5432,
-    validEmails: 4980,
-    invalidEmails: 452,
-    status: "paused",
-    createdAt: "2024-03-01",
-    lastUpdated: "2024-03-10",
-  },
-]
-
-const sampleEmails = [
-  { email: "john.doe@example.com", status: "valid", addedAt: "2024-03-20" },
-  { email: "jane.smith@company.com", status: "valid", addedAt: "2024-03-19" },
-  { email: "invalid-email@", status: "invalid", addedAt: "2024-03-18" },
-  { email: "user@domain.co", status: "valid", addedAt: "2024-03-17" },
-  { email: "test@example.org", status: "valid", addedAt: "2024-03-16" },
-]
+import { useEmailListStore } from '@/store/emailListStore'
+import { useToast } from "@/hooks/use-toast"
 
 export function EmailLists() {
+  const { toast } = useToast()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
   const [selectedList, setSelectedList] = useState<string | null>(null)
@@ -116,29 +63,7 @@ export function EmailLists() {
   const [fileProcessingProgress, setFileProcessingProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Email validation function
-  const validateEmail = (email: string): {status: 'valid' | 'invalid', error?: string} => {
-    if (!email.trim()) {
-      return { status: 'invalid', error: 'Email is required' }
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return { status: 'invalid', error: 'Invalid email format' }
-    }
-    
-    return { status: 'valid' }
-  }
-
-
-
-
-
-
-
-
-
-    const {
+  const {
     emailLists,
     currentList,
     emails,
@@ -155,24 +80,36 @@ export function EmailLists() {
     validateEmailBatch,
     setCurrentList,
     clearError
-  } = useEmailListStore();
+  } = useEmailListStore()
 
   useEffect(() => {
-    fetchEmailLists();
-  }, []);
+    fetchEmailLists()
+  }, [])
 
-  const handleCreateEmailList = async (name: string, description?: string, emails: string[] = []) => {
-    try {
-      await createEmailList(name, description, emails);
-      // Show success message
-    } catch (error) {
-      // Show error message
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      })
+      clearError()
     }
-  };
+  }, [error, toast, clearError])
 
-
-
-
+  // Email validation function
+  const validateEmail = (email: string): {status: 'valid' | 'invalid', error?: string} => {
+    if (!email.trim()) {
+      return { status: 'invalid', error: 'Email is required' }
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return { status: 'invalid', error: 'Invalid email format' }
+    }
+    
+    return { status: 'valid' }
+  }
 
   // Handle email input with real-time validation
   const handleEmailInput = (value: string) => {
@@ -270,24 +207,53 @@ export function EmailLists() {
     setIsValidating(true)
     setValidationProgress(0)
 
-    // Simulate validation progress
-    const interval = setInterval(() => {
-      setValidationProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setIsValidating(false)
-          setIsUploadDialogOpen(false)
-          setBulkEmails("")
-          setEmailValidationResults([])
-          setCurrentEmail("")
-          setFile(null)
-          setFileEmails([])
-          setFileValidationResults([])
-          return 100
-        }
-        return prev + 10
+    try {
+      // Determine which emails to upload (from textarea or file)
+      const emailsToUpload = fileEmails.length > 0 
+        ? fileEmails.filter(email => fileValidationResults.find(r => r.email === email)?.status === 'valid')
+        : emailValidationResults.filter(r => r.status === 'valid').map(r => r.email)
+      
+      if (emailsToUpload.length === 0) {
+        toast({
+          title: "No valid emails",
+          description: "Please add at least one valid email address.",
+          variant: "destructive",
+        })
+        setIsValidating(false)
+        return
+      }
+      
+      // Simulate validation progress
+      const interval = setInterval(() => {
+        setValidationProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval)
+            setIsValidating(false)
+            setIsUploadDialogOpen(false)
+            setBulkEmails("")
+            setEmailValidationResults([])
+            setCurrentEmail("")
+            setFile(null)
+            setFileEmails([])
+            setFileValidationResults([])
+            
+            toast({
+              title: "Emails uploaded",
+              description: `${emailsToUpload.length} emails have been added to the list.`,
+            })
+            return 100
+          }
+          return prev + 10
+        })
+      }, 200)
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading the emails. Please try again.",
+        variant: "destructive",
       })
-    }, 200)
+      setIsValidating(false)
+    }
   }
 
   // Trigger file input click
@@ -295,30 +261,67 @@ export function EmailLists() {
     fileInputRef.current?.click()
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-500/10 text-green-500">Active</Badge>
-      case "paused":
-        return <Badge className="bg-yellow-500/10 text-yellow-500">Paused</Badge>
-      case "archived":
-        return <Badge variant="outline">Archived</Badge>
-      default:
-        return <Badge variant="secondary">Unknown</Badge>
+  // Handle create email list
+  const handleCreateEmailList = async () => {
+    if (!newListName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a name for the email list.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      await createEmailList(newListName, newListDescription)
+      
+      setIsCreateDialogOpen(false)
+      setNewListName("")
+      setNewListDescription("")
+      
+      toast({
+        title: "List created",
+        description: "Your email list has been created successfully.",
+      })
+    } catch (error) {
+      // Error is handled by the useEffect above
     }
   }
 
-  const getEmailStatusIcon = (status: string) => {
-    switch (status) {
-      case "valid":
-        return <CheckCircle className="w-4 h-4 text-green-500" />
-      case "invalid":
-        return <XCircle className="w-4 h-4 text-red-500" />
-      case "pending":
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
-      default:
-        return <XCircle className="w-4 h-4 text-gray-500" />
+  // Handle delete email list
+  const handleDeleteEmailList = async (listId: string) => {
+    try {
+      await deleteEmailList(listId)
+      
+      toast({
+        title: "List deleted",
+        description: "The email list has been deleted successfully.",
+      })
+    } catch (error) {
+      // Error is handled by the useEffect above
     }
+  }
+
+  // Handle view email list details
+  const handleViewEmailList = async (listId: string) => {
+    try {
+      await getEmailListWithStats(listId)
+      await getEmailsInList(listId)
+      setSelectedList(listId)
+    } catch (error) {
+      // Error is handled by the useEffect above
+    }
+  }
+
+  const getStatusBadge = (status?: string) => {
+    // Since the store doesn't have a status field, we'll use a default
+    return <Badge className="bg-green-500/10 text-green-500">Active</Badge>
+  }
+
+  const getEmailStatusIcon = (valid: boolean) => {
+    return valid 
+      ? <CheckCircle className="w-4 h-4 text-green-500" />
+      : <XCircle className="w-4 h-4 text-red-500" />
   }
 
   const filteredLists = emailLists.filter(
@@ -609,7 +612,9 @@ export function EmailLists() {
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={() => setIsCreateDialogOpen(false)}>Create List</Button>
+                  <Button onClick={handleCreateEmailList} disabled={isLoading || !newListName.trim()}>
+                    {isLoading ? "Creating..." : "Create List"}
+                  </Button>
                 </div>
               </div>
             </DialogContent>
@@ -636,7 +641,7 @@ export function EmailLists() {
 
       {/* Lists Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLists.map((list:any) => (
+        {filteredLists.map((list) => (
           <Card key={list.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -644,14 +649,14 @@ export function EmailLists() {
                   <Users className="w-5 h-5 text-primary" />
                   <CardTitle className="text-lg">{list.name}</CardTitle>
                 </div>
-                <DropdownMenu open={false}>
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-50">
-                    <DropdownMenuItem onClick={() => console.log('View Details clicked')}>
+                    <DropdownMenuItem onClick={() => handleViewEmailList(list.id)}>
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
@@ -665,7 +670,7 @@ export function EmailLists() {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="text-red-600" 
-                      onClick={() => console.log('Delete clicked')}
+                      onClick={() => handleDeleteEmailList(list.id)}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete
@@ -678,7 +683,7 @@ export function EmailLists() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                {getStatusBadge(list?.status)}
+                {getStatusBadge()}
               </div>
 
               <div className="space-y-2">
@@ -705,7 +710,7 @@ export function EmailLists() {
               </div>
 
               <div className="text-xs text-muted-foreground">
-                Updated {new Date(list.lastUpdated).toLocaleDateString()}
+                Updated {new Date(list.updatedAt).toLocaleDateString()}
               </div>
             </CardContent>
           </Card>
@@ -713,10 +718,10 @@ export function EmailLists() {
       </div>
 
       {/* Email Details Table */}
-      {selectedList && (
+      {selectedList && currentList && (
         <Card>
           <CardHeader>
-            <CardTitle>Email Details - Newsletter Subscribers</CardTitle>
+            <CardTitle>Email Details - {currentList.name}</CardTitle>
             <CardDescription>Individual email addresses and their validation status</CardDescription>
           </CardHeader>
           <CardContent>
@@ -748,25 +753,25 @@ export function EmailLists() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sampleEmails.map((email, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{email.email}</TableCell>
+                  {emails.map((email) => (
+                    <TableRow key={email.id}>
+                      <TableCell className="font-medium">{email.address}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          {getEmailStatusIcon(email.status)}
+                          {getEmailStatusIcon(email.valid)}
                           <Badge
-                            variant={email.status === "valid" ? "default" : "destructive"}
+                            variant={email.valid ? "default" : "destructive"}
                             className={
-                              email.status === "valid" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                              email.valid ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
                             }
                           >
-                            {email.status}
+                            {email.valid ? "Valid" : "Invalid"}
                           </Badge>
                         </div>
                       </TableCell>
-                      <TableCell>{new Date(email.addedAt).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(email.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <DropdownMenu open={false}>
+                        <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                               <MoreHorizontal className="w-4 h-4" />

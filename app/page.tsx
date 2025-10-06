@@ -67,11 +67,11 @@ export default function Home() {
         return (
            <div className="min-h-screen bg-background dark">
              <EmailComposer
-              selectedCampaign={selectedCampaign}
-              onCampaignSelect={handleCampaignSelect}
-              onSave={handleSave}
-              onSend={handleSend}
-              onPreview={handlePreview}
+              // selectedCampaign={selectedCampaign}
+              // onCampaignSelect={handleCampaignSelect}
+              // onSave={handleSave}
+              // onSend={handleSend}
+              // onPreview={handlePreview}
             />
           </div>
         );

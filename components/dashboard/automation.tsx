@@ -47,21 +47,13 @@ import { useAutomationStore } from "@/store/automationStore"
 interface AutomationWorkflow {
   id: string
   name: string
-  description: string
-  status: "active" | "paused" | "draft"
-  trigger: {
-    type: "signup" | "purchase" | "email_open" | "email_click" | "time_based" | "list_join" | "tag_added"
-    conditions: any
-  }
-  steps: WorkflowStep[]
-  stats: {
-    totalEntered: number
-    completed: number
-    active: number
-    conversionRate: number
-  }
+  description?: string
+  trigger: string
+  conditions: any
+  actions: any[]
+  isActive: boolean
   createdAt: string
-  lastModified: string
+  updatedAt: string
 }
 
 interface WorkflowStep {
@@ -71,88 +63,6 @@ interface WorkflowStep {
   position: { x: number; y: number }
   connections: string[]
 }
-
-const automationWorkflows: AutomationWorkflow[] = [
-  {
-    id: "1",
-    name: "Welcome Series",
-    description: "5-email onboarding sequence for new subscribers",
-    status: "active",
-    trigger: {
-      type: "signup",
-      conditions: { list: "newsletter" },
-    },
-    steps: [
-      {
-        id: "step1",
-        type: "email",
-        config: { template: "welcome-1", delay: 0 },
-        position: { x: 100, y: 100 },
-        connections: ["step2"],
-      },
-      {
-        id: "step2",
-        type: "delay",
-        config: { duration: 24, unit: "hours" },
-        position: { x: 100, y: 200 },
-        connections: ["step3"],
-      },
-      {
-        id: "step3",
-        type: "email",
-        config: { template: "welcome-2" },
-        position: { x: 100, y: 300 },
-        connections: [],
-      },
-    ],
-    stats: {
-      totalEntered: 1247,
-      completed: 892,
-      active: 156,
-      conversionRate: 71.5,
-    },
-    createdAt: "2024-01-15",
-    lastModified: "2024-03-20",
-  },
-  {
-    id: "2",
-    name: "Abandoned Cart Recovery",
-    description: "3-email sequence to recover abandoned carts",
-    status: "active",
-    trigger: {
-      type: "purchase",
-      conditions: { event: "cart_abandoned", delay: 1 },
-    },
-    steps: [],
-    stats: {
-      totalEntered: 456,
-      completed: 123,
-      active: 45,
-      conversionRate: 27.0,
-    },
-    createdAt: "2024-02-01",
-    lastModified: "2024-03-18",
-  },
-  {
-    id: "3",
-    name: "Re-engagement Campaign",
-    description: "Win back inactive subscribers",
-    status: "paused",
-    trigger: {
-      type: "time_based",
-      conditions: { inactivity: 30, unit: "days" },
-    },
-    steps: [],
-    stats: {
-      totalEntered: 2341,
-      completed: 567,
-      active: 0,
-      conversionRate: 24.2,
-    },
-    createdAt: "2024-01-20",
-    lastModified: "2024-03-15",
-  },
-]
 
 const triggerTypes = [
   { value: "signup", label: "User Signup", icon: UserPlus, description: "When someone joins your list" },
@@ -181,24 +91,21 @@ export default function Automation() {
   const { toast } = useToast()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isBuilderOpen, setIsBuilderOpen] = useState(false)
-  const [selectedWorkflow, setSelectedWorkflow] = useState<AutomationWorkflow | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
 
   const [newWorkflow, setNewWorkflow] = useState({
     name: "",
     description: "",
     triggerType: "",
     triggerConditions: {},
-    steps: [] as WorkflowStep[],
+    actions: [] as any[],
   })
 
-
-    const {
+  const {
     automations,
     currentAutomation,
     executions,
-    isLoading:loader,
+    isLoading,
     error,
     fetchAutomations,
     createAutomation,
@@ -215,15 +122,116 @@ export default function Automation() {
     fetchAutomations();
   }, []);
 
-  const handleCreateAutomation = async (automationData: any) => {
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+      clearError();
+    }
+  }, [error, toast, clearError]);
+
+  const handleCreateWorkflow = async () => {
     try {
+      const automationData = {
+        name: newWorkflow.name,
+        description: newWorkflow.description,
+        trigger: newWorkflow.triggerType,
+        conditions: newWorkflow.triggerConditions,
+        actions: newWorkflow.actions,
+        isActive: false, // Start as inactive
+      };
+
       await createAutomation(automationData);
-      // Show success message
+      
+      setIsCreateDialogOpen(false);
+      setNewWorkflow({
+        name: "",
+        description: "",
+        triggerType: "",
+        triggerConditions: {},
+        actions: [],
+      });
+
+      toast({
+        title: "Workflow Created",
+        description: "Your automation workflow has been created successfully.",
+      });
     } catch (error) {
-      // Show error message
+      // Error is handled by the useEffect above
     }
   };
 
+  const handleWorkflowAction = async (action: string, workflow: AutomationWorkflow) => {
+    try {
+      switch (action) {
+        case "view":
+          await getAutomation(workflow.id);
+          break;
+        case "edit":
+          await getAutomation(workflow.id);
+          setIsBuilderOpen(true);
+          break;
+        case "duplicate":
+          const duplicateData = {
+            name: `${workflow.name} (Copy)`,
+            description: workflow.description,
+            trigger: workflow.trigger,
+            conditions: workflow.conditions,
+            actions: workflow.actions,
+            isActive: false,
+          };
+          await createAutomation(duplicateData);
+          toast({
+            title: "Workflow Duplicated",
+            description: `${workflow.name} has been duplicated successfully.`,
+          });
+          break;
+        case "pause":
+          await toggleAutomation(workflow.id);
+          toast({
+            title: "Workflow Paused",
+            description: `${workflow.name} has been paused.`,
+          });
+          break;
+        case "activate":
+          await toggleAutomation(workflow.id);
+          toast({
+            title: "Workflow Activated",
+            description: `${workflow.name} is now active.`,
+          });
+          break;
+        case "delete":
+          await deleteAutomation(workflow.id);
+          toast({
+            title: "Workflow Deleted",
+            description: `${workflow.name} has been deleted.`,
+          });
+          break;
+      }
+    } catch (error) {
+      // Error is handled by the useEffect above
+    }
+  };
+
+  const getTriggerLabel = (type: string) => {
+    const trigger = triggerTypes.find((t) => t.value === type)
+    return trigger ? trigger.label : type
+  }
+
+  const getStatusBadge = (isActive: boolean) => {
+    return isActive 
+      ? <Badge className="bg-green-500/10 text-green-500">Active</Badge>
+      : <Badge className="bg-yellow-500/10 text-yellow-500">Paused</Badge>
+  }
+
+  const filteredWorkflows = automations.filter(
+    (workflow) =>
+      workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (workflow.description && workflow.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
 
   const workflowColumns = [
     {
@@ -237,56 +245,35 @@ export default function Automation() {
               <Workflow className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">{workflow.name}</span>
             </div>
-            <p className="text-sm text-muted-foreground">{workflow.description}</p>
+            {workflow.description && (
+              <p className="text-sm text-muted-foreground">{workflow.description}</p>
+            )}
             <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-              <span>{getTriggerLabel(workflow.trigger.type)}</span>
+              <span>{getTriggerLabel(workflow.trigger)}</span>
               <span>•</span>
-              <span>{workflow.steps.length} steps</span>
+              <span>{workflow.actions.length} steps</span>
             </div>
           </div>
         )
       },
     },
     {
-      accessorKey: "status",
+      accessorKey: "isActive",
       header: "Status",
       cell: ({ row }: any) => {
         const workflow = row.original
-        return getStatusBadge(workflow.status)
+        return getStatusBadge(workflow.isActive)
       },
     },
     {
-      accessorKey: "stats",
-      header: "Performance",
-      cell: ({ row }: any) => {
-        const workflow = row.original
-        return (
-          <div className="space-y-1">
-            <div className="flex items-center space-x-4 text-sm">
-              <div>
-                <span className="font-medium">{workflow.stats.totalEntered}</span>
-                <span className="text-muted-foreground ml-1">entered</span>
-              </div>
-              <div>
-                <span className="font-medium">{workflow.stats.active}</span>
-                <span className="text-muted-foreground ml-1">active</span>
-              </div>
-            </div>
-            <div className="text-sm">
-              <span className="font-medium text-green-600">{workflow.stats.conversionRate}%</span>
-              <span className="text-muted-foreground ml-1">completion rate</span>
-            </div>
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "lastModified",
+      accessorKey: "updatedAt",
       header: "Last Modified",
       cell: ({ row }: any) => {
         const workflow = row.original
         return (
-          <div className="text-sm text-muted-foreground">{new Date(workflow.lastModified).toLocaleDateString()}</div>
+          <div className="text-sm text-muted-foreground">
+            {new Date(workflow.updatedAt).toLocaleDateString()}
+          </div>
         )
       },
     },
@@ -315,13 +302,13 @@ export default function Automation() {
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate
               </DropdownMenuItem>
-              {workflow.status === "active" && (
+              {workflow.isActive && (
                 <DropdownMenuItem onClick={() => handleWorkflowAction("pause", workflow)}>
                   <Pause className="w-4 h-4 mr-2" />
                   Pause
                 </DropdownMenuItem>
               )}
-              {workflow.status === "paused" && (
+              {!workflow.isActive && (
                 <DropdownMenuItem onClick={() => handleWorkflowAction("activate", workflow)}>
                   <Play className="w-4 h-4 mr-2" />
                   Activate
@@ -337,98 +324,6 @@ export default function Automation() {
       },
     },
   ]
-
-  const handleWorkflowAction = async (action: string, workflow: AutomationWorkflow) => {
-    setIsLoading(true)
-    console.log(`[v0] Workflow action: ${action}`, workflow)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    switch (action) {
-      case "view":
-        setSelectedWorkflow(workflow)
-        break
-      case "edit":
-        setSelectedWorkflow(workflow)
-        setIsBuilderOpen(true)
-        break
-      case "duplicate":
-        toast({
-          title: "Workflow Duplicated",
-          description: `${workflow.name} has been duplicated successfully.`,
-        })
-        break
-      case "pause":
-        toast({
-          title: "Workflow Paused",
-          description: `${workflow.name} has been paused.`,
-        })
-        break
-      case "activate":
-        toast({
-          title: "Workflow Activated",
-          description: `${workflow.name} is now active.`,
-        })
-        break
-      case "delete":
-        toast({
-          title: "Workflow Deleted",
-          description: `${workflow.name} has been deleted.`,
-        })
-        break
-    }
-
-    setIsLoading(false)
-  }
-
-  const handleCreateWorkflow = async () => {
-    setIsLoading(true)
-    console.log("[v0] Creating workflow:", newWorkflow)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    setIsCreateDialogOpen(false)
-    setNewWorkflow({
-      name: "",
-      description: "",
-      triggerType: "",
-      triggerConditions: {},
-      steps: [],
-    })
-
-    toast({
-      title: "Workflow Created",
-      description: "Your automation workflow has been created successfully.",
-    })
-
-    setIsLoading(false)
-  }
-
-  const getTriggerLabel = (type: string) => {
-    const trigger = triggerTypes.find((t) => t.value === type)
-    return trigger ? trigger.label : type
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-500/10 text-green-500">Active</Badge>
-      case "paused":
-        return <Badge className="bg-yellow-500/10 text-yellow-500">Paused</Badge>
-      case "draft":
-        return <Badge variant="outline">Draft</Badge>
-      default:
-        return <Badge variant="secondary">Unknown</Badge>
-    }
-  }
-
-  const filteredWorkflows = automationWorkflows.filter(
-    (workflow) =>
-      workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      workflow.description.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
 
   return (
     <div className="space-y-6">
@@ -614,7 +509,7 @@ export default function Automation() {
         <EnhancedModal
           isOpen={isBuilderOpen}
           onClose={() => setIsBuilderOpen(false)}
-          title={selectedWorkflow ? `Edit: ${selectedWorkflow.name}` : "Workflow Builder"}
+          title={currentAutomation ? `Edit: ${currentAutomation.name}` : "Workflow Builder"}
           description="Design your automation workflow with our visual builder"
           size="full"
         >
@@ -655,7 +550,9 @@ export default function Automation() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">
+              {automations.filter(a => a.isActive).length}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+2</span> this month
             </p>
@@ -664,11 +561,11 @@ export default function Automation() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">People in Workflows</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Workflows</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3,247</div>
+            <div className="text-2xl font-bold">{automations.length}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+15%</span> from last month
             </p>

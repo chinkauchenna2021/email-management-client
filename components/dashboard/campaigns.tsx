@@ -40,104 +40,30 @@ import { useDomainStore } from "@/store/domainStore"
 import { useEmailListStore } from "@/store/emailListStore"
 import { useTemplateStore } from "@/store/templateStore"
 import { useCampaignStore } from "@/store/campaignStore"
-
-const campaigns = [
-  {
-    id: "1",
-    name: "Summer Sale 2024",
-    subject: "🌞 Summer Sale: Up to 50% Off Everything!",
-    status: "sent",
-    domain: "company.com",
-    list: "Newsletter Subscribers",
-    totalRecipients: 15420,
-    sent: 15420,
-    delivered: 14876,
-    opened: 8234,
-    clicked: 1876,
-    bounced: 544,
-    unsubscribed: 23,
-    scheduledAt: null,
-    sentAt: "2024-03-20T10:00:00Z",
-    createdAt: "2024-03-19T15:30:00Z",
-  },
-  {
-    id: "2",
-    name: "Product Launch Announcement",
-    subject: "Introducing Our Revolutionary New Product",
-    status: "sending",
-    domain: "marketing.company.com",
-    list: "Product Launch List",
-    totalRecipients: 8500,
-    sent: 6800,
-    delivered: 6650,
-    opened: 0,
-    clicked: 0,
-    bounced: 150,
-    unsubscribed: 0,
-    scheduledAt: null,
-    sentAt: "2024-03-21T09:00:00Z",
-    createdAt: "2024-03-20T14:20:00Z",
-  },
-  {
-    id: "3",
-    name: "Weekly Newsletter #47",
-    subject: "This Week's Top Stories and Updates",
-    status: "scheduled",
-    domain: "company.com",
-    list: "Newsletter Subscribers",
-    totalRecipients: 15420,
-    sent: 0,
-    delivered: 0,
-    opened: 0,
-    clicked: 0,
-    bounced: 0,
-    unsubscribed: 0,
-    scheduledAt: "2024-03-22T09:00:00Z",
-    sentAt: null,
-    createdAt: "2024-03-21T11:15:00Z",
-  },
-  {
-    id: "4",
-    name: "Welcome Series - Part 1",
-    subject: "Welcome to EmailFlow! Let's get started",
-    status: "draft",
-    domain: "company.com",
-    list: "New Subscribers",
-    totalRecipients: 0,
-    sent: 0,
-    delivered: 0,
-    opened: 0,
-    clicked: 0,
-    bounced: 0,
-    unsubscribed: 0,
-    scheduledAt: null,
-    sentAt: null,
-    createdAt: "2024-03-21T16:45:00Z",
-  },
-]
+import { useToast } from "@/hooks/use-toast"
 
 export function Campaigns() {
+  const { toast } = useToast()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false) // Added loading state
+  
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     subject: "",
     content: "",
-    domain: "",
-    list: "",
+    domainId: "",
+    listId: "",
+    templateId: "",
     scheduledDate: undefined as Date | undefined,
   })
 
-
-
   const {
-    campaigns:campaign,
+    campaigns,
     currentCampaign,
     campaignStats,
-    isLoading:loader,
+    isLoading,
     error,
     fetchCampaigns,
     createCampaign,
@@ -161,35 +87,231 @@ export function Campaigns() {
     getOverallCampaignStats();
   }, []);
 
-  const handleCreateCampaign = async (campaignData: any) => {
+  // Safe domain access
+const safeDomains = Array.isArray(domains) ? domains : [];
+
+// Safe email lists access  
+const safeEmailLists = Array.isArray(emailLists) ? emailLists : [];
+
+// Safe templates access
+const safeTemplates = Array.isArray(templates) ? templates : [];
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+      clearError();
+    }
+  }, [error, toast, clearError]);
+
+  const handleCreateCampaign = async () => {
     try {
+      const campaignData = {
+        name: newCampaign.name,
+        subject: newCampaign.subject,
+        content: newCampaign.content,
+        domainId: newCampaign.domainId,
+        listId: newCampaign.listId,
+        templateId: newCampaign.templateId || undefined,
+        status: 'DRAFT' as const,
+        scheduledAt: newCampaign.scheduledDate ? newCampaign.scheduledDate.toISOString() : undefined,
+      };
+
       await createCampaign(campaignData);
-      // Show success message
+      
+      setIsCreateDialogOpen(false);
+      setNewCampaign({
+        name: "",
+        subject: "",
+        content: "",
+        domainId: "",
+        listId: "",
+        templateId: "",
+        scheduledDate: undefined,
+      });
+
+      toast({
+        title: "Campaign Created",
+        description: "Your campaign has been created successfully.",
+      });
     } catch (error) {
-      // Show error message
+      // Error is handled by the useEffect above
     }
   };
 
 
+  // Debugging logs to verify campaigns is always an array
+  useEffect(() => {
+  console.log('Campaigns value:', campaigns);
+  console.log('Campaigns type:', typeof campaigns);
+  console.log('Is campaigns array?', Array.isArray(campaigns));
+}, [campaigns]);
 
+  const handleCampaignAction = async (action: string, campaign: any) => {
+    try {
+      switch (action) {
+        case "view":
+          await getCampaignDetails(campaign.id);
+          await getCampaignStats(campaign.id);
+          setSelectedCampaign(campaign.id);
+          break;
+        case "edit":
+          await getCampaignDetails(campaign.id);
+          setSelectedCampaign(campaign.id);
+          setIsCreateDialogOpen(true);
+          break;
+        case "duplicate":
+          const duplicateData = {
+            name: `${campaign.name} (Copy)`,
+            subject: campaign.subject,
+            content: campaign.content,
+            domainId: campaign.domainId,
+            listId: campaign.listId,
+            templateId: campaign.templateId,
+            status: 'DRAFT' as const,
+          };
+          await createCampaign(duplicateData);
+          toast({
+            title: "Campaign Duplicated",
+            description: `${campaign.name} has been duplicated successfully.`,
+          });
+          break;
+        case "pause":
+          await updateCampaign(campaign.id, { status: 'PAUSED' });
+          toast({
+            title: "Campaign Paused",
+            description: `${campaign.name} has been paused.`,
+          });
+          break;
+        case "resume":
+          await updateCampaign(campaign.id, { status: 'READY' });
+          toast({
+            title: "Campaign Resumed",
+            description: `${campaign.name} has been resumed.`,
+          });
+          break;
+        case "send":
+          await sendCampaign(campaign.id);
+          toast({
+            title: "Campaign Sending",
+            description: `${campaign.name} is now being sent.`,
+          });
+          break;
+        case "delete":
+          await deleteCampaign(campaign.id);
+          toast({
+            title: "Campaign Deleted",
+            description: `${campaign.name} has been deleted.`,
+          });
+          break;
+      }
+    } catch (error) {
+      // Error is handled by the useEffect above
+    }
+  };
 
+  const handleTemplateSelect = (template: any) => {
+    setNewCampaign({
+      ...newCampaign,
+      content: template.content,
+      name: template.name,
+      subject: `${template.name} - ${new Date().toLocaleDateString()}`,
+      templateId: template.id,
+    });
+    setIsTemplateDialogOpen(false);
+  };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "SENT":
+        return <Badge className="bg-green-500/10 text-green-500">Sent</Badge>;
+      case "SENDING":
+        return <Badge className="bg-blue-500/10 text-blue-500">Sending</Badge>;
+      case "SCHEDULED":
+        return <Badge className="bg-purple-500/10 text-purple-500">Scheduled</Badge>;
+      case "DRAFT":
+        return <Badge variant="outline">Draft</Badge>;
+      case "PAUSED":
+        return <Badge className="bg-yellow-500/10 text-yellow-500">Paused</Badge>;
+      case "FAILED":
+        return <Badge className="bg-red-500/10 text-red-500">Failed</Badge>;
+      case "READY":
+        return <Badge className="bg-indigo-500/10 text-indigo-500">Ready</Badge>;
+      default:
+        return <Badge variant="secondary">Unknown</Badge>;
+    }
+  };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "SENT":
+        return <Send className="w-4 h-4 text-green-500" />;
+      case "SENDING":
+        return <Clock className="w-4 h-4 text-blue-500 animate-spin" />;
+      case "SCHEDULED":
+        return <CalendarIcon className="w-4 h-4 text-purple-500" />;
+      case "DRAFT":
+        return <Edit className="w-4 h-4 text-gray-500" />;
+      case "PAUSED":
+        return <Pause className="w-4 h-4 text-yellow-500" />;
+      case "FAILED":
+        return <Trash2 className="w-4 h-4 text-red-500" />;
+      case "READY":
+        return <Play className="w-4 h-4 text-indigo-500" />;
+      default:
+        return <Mail className="w-4 h-4 text-gray-500" />;
+    }
+  };
 
+  const calculateOpenRate = (opened: number, delivered: number) => {
+    return delivered > 0 ? ((opened / delivered) * 100).toFixed(1) : "0.0";
+  };
 
+  const calculateClickRate = (clicked: number, delivered: number) => {
+    return delivered > 0 ? ((clicked / delivered) * 100).toFixed(1) : "0.0";
+  };
 
+const getDomainName = (domainId: string) => {
+  const domain = safeDomains.find(d => d.id === domainId);
+  return domain ? domain.domain : domainId;
+};
 
+const getListName = (listId: string) => {
+  const list = safeEmailLists.find(l => l.id === listId);
+  return list ? list.name : listId;
+};
 
-
-
-
+const filteredCampaigns = (() => {
+  // Multiple safety checks
+  if (!campaigns) return [];
+  if (!Array.isArray(campaigns)) {
+    console.error('campaigns is not an array:', campaigns);
+    return [];
+  }
+  
+  return campaigns.filter((campaign) => {
+    // Check if campaign exists and has required properties
+    if (!campaign) return false;
+    
+    const name = campaign.name || '';
+    const subject = campaign.subject || '';
+    
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subject.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+})();
 
   const campaignColumns = [
     {
       accessorKey: "name",
       header: "Campaign",
       cell: ({ row }: any) => {
-        const campaign = row.original
+        const campaign = row.original;
         return (
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
@@ -198,86 +320,43 @@ export function Campaigns() {
             </div>
             <p className="text-sm text-muted-foreground truncate max-w-xs">{campaign.subject}</p>
             <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-              <span>{campaign.domain}</span>
+              <span>{getDomainName(campaign.domainId)}</span>
               <span>•</span>
-              <span>{campaign.list}</span>
+              <span>{getListName(campaign.listId)}</span>
             </div>
           </div>
-        )
+        );
       },
     },
     {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }: any) => {
-        const campaign = row.original
+        const campaign = row.original;
         return (
           <div className="space-y-1">
             {getStatusBadge(campaign.status)}
-            {campaign.status === "sending" && (
-              <Progress value={(campaign.sent / campaign.totalRecipients) * 100} className="h-1 w-16" />
-            )}
           </div>
-        )
+        );
       },
     },
     {
-      accessorKey: "totalRecipients",
-      header: "Recipients",
+      accessorKey: "createdAt",
+      header: "Created",
       cell: ({ row }: any) => {
-        const campaign = row.original
+        const campaign = row.original;
         return (
-          <div className="text-sm">
-            <div className="font-medium">{campaign.totalRecipients.toLocaleString()}</div>
-            {campaign.sent > 0 && <div className="text-muted-foreground">{campaign.sent.toLocaleString()} sent</div>}
+          <div className="text-sm text-muted-foreground">
+            {new Date(campaign.createdAt).toLocaleDateString()}
           </div>
-        )
-      },
-    },
-    {
-      accessorKey: "delivered",
-      header: "Delivered",
-      cell: ({ row }: any) => {
-        const campaign = row.original
-        return (
-          <div className="text-sm">
-            <div className="font-medium">{campaign.delivered.toLocaleString()}</div>
-            {campaign.bounced > 0 && <div className="text-red-500">{campaign.bounced} bounced</div>}
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "opened",
-      header: "Open Rate",
-      cell: ({ row }: any) => {
-        const campaign = row.original
-        return (
-          <div className="text-sm">
-            <div className="font-medium">{calculateOpenRate(campaign.opened, campaign.delivered)}%</div>
-            <div className="text-muted-foreground">{campaign.opened.toLocaleString()} opens</div>
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "clicked",
-      header: "Click Rate",
-      cell: ({ row }: any) => {
-        const campaign = row.original
-        return (
-          <div className="text-sm">
-            <div className="font-medium">{calculateClickRate(campaign.clicked, campaign.delivered)}%</div>
-            <div className="text-muted-foreground">{campaign.clicked.toLocaleString()} clicks</div>
-          </div>
-        )
+        );
       },
     },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }: any) => {
-        const campaign = row.original
+        const campaign = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -298,16 +377,16 @@ export function Campaigns() {
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate
               </DropdownMenuItem>
-              {campaign.status === "sending" && (
+              {campaign.status === "SENDING" && (
                 <DropdownMenuItem onClick={() => handleCampaignAction("pause", campaign)}>
                   <Pause className="w-4 h-4 mr-2" />
                   Pause
                 </DropdownMenuItem>
               )}
-              {campaign.status === "paused" && (
-                <DropdownMenuItem onClick={() => handleCampaignAction("resume", campaign)}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Resume
+              {(campaign.status === "PAUSED" || campaign.status === "DRAFT" || campaign.status === "READY") && (
+                <DropdownMenuItem onClick={() => handleCampaignAction("send", campaign)}>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Now
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem className="text-red-600" onClick={() => handleCampaignAction("delete", campaign)}>
@@ -316,118 +395,10 @@ export function Campaigns() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
     },
-  ]
-
-  const handleCampaignAction = async (action: string, campaign: any) => {
-    setIsLoading(true)
-    console.log(`[v0] Campaign action: ${action}`, campaign)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    switch (action) {
-      case "view":
-        setSelectedCampaign(campaign.id)
-        break
-      case "edit":
-        // Open edit modal
-        break
-      case "duplicate":
-        // Duplicate campaign logic
-        break
-      case "pause":
-      case "resume":
-      case "delete":
-        // Handle respective actions
-        break
-    }
-
-    setIsLoading(false)
-  }
-
-  // const handleCreateCampaign = async () => {
-  //   setIsLoading(true)
-  //   console.log("[v0] Creating campaign:", newCampaign)
-
-  //   // Simulate API call
-  //   await new Promise((resolve) => setTimeout(resolve, 2000))
-
-  //   setIsCreateDialogOpen(false)
-  //   setNewCampaign({
-  //     name: "",
-  //     subject: "",
-  //     content: "",
-  //     domain: "",
-  //     list: "",
-  //     scheduledDate: undefined,
-  //   })
-  //   setIsLoading(false)
-  // }
-
-  const handleTemplateSelect = (template: any) => {
-    setNewCampaign({
-      ...newCampaign,
-      content: template.content,
-      name: template.name,
-      subject: `${template.name} - ${new Date().toLocaleDateString()}`,
-    })
-    setIsTemplateDialogOpen(false)
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "sent":
-        return <Badge className="bg-green-500/10 text-green-500">Sent</Badge>
-      case "sending":
-        return <Badge className="bg-blue-500/10 text-blue-500">Sending</Badge>
-      case "scheduled":
-        return <Badge className="bg-purple-500/10 text-purple-500">Scheduled</Badge>
-      case "draft":
-        return <Badge variant="outline">Draft</Badge>
-      case "paused":
-        return <Badge className="bg-yellow-500/10 text-yellow-500">Paused</Badge>
-      case "failed":
-        return <Badge className="bg-red-500/10 text-red-500">Failed</Badge>
-      default:
-        return <Badge variant="secondary">Unknown</Badge>
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "sent":
-        return <Send className="w-4 h-4 text-green-500" />
-      case "sending":
-        return <Clock className="w-4 h-4 text-blue-500 animate-spin" />
-      case "scheduled":
-        return <CalendarIcon className="w-4 h-4 text-purple-500" />
-      case "draft":
-        return <Edit className="w-4 h-4 text-gray-500" />
-      case "paused":
-        return <Pause className="w-4 h-4 text-yellow-500" />
-      case "failed":
-        return <Trash2 className="w-4 h-4 text-red-500" />
-      default:
-        return <Mail className="w-4 h-4 text-gray-500" />
-    }
-  }
-
-  const calculateOpenRate = (opened: number, delivered: number) => {
-    return delivered > 0 ? ((opened / delivered) * 100).toFixed(1) : "0.0"
-  }
-
-  const calculateClickRate = (clicked: number, delivered: number) => {
-    return delivered > 0 ? ((clicked / delivered) * 100).toFixed(1) : "0.0"
-  }
-
-  const filteredCampaigns = campaigns.filter(
-    (campaign) =>
-      campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      campaign.subject.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  ];
 
   return (
     <div className="space-y-6">
@@ -456,11 +427,11 @@ export function Campaigns() {
         <EnhancedModal
           isOpen={isCreateDialogOpen}
           onClose={() => setIsCreateDialogOpen(false)}
-          title="Create New Campaign"
-          description="Set up a new email campaign to send to your subscribers"
+          title={selectedCampaign ? "Edit Campaign" : "Create New Campaign"}
+          description={selectedCampaign ? "Update your campaign details" : "Set up a new email campaign to send to your subscribers"}
           size="full"
           isLoading={isLoading}
-          loadingText="Creating campaign..."
+          loadingText={selectedCampaign ? "Updating campaign..." : "Creating campaign..."}
           scrollable={true}
         >
           <Tabs defaultValue="details" className="w-full">
@@ -484,33 +455,38 @@ export function Campaigns() {
                 <div className="space-y-2">
                   <Label htmlFor="domain">Sending Domain</Label>
                   <Select
-                    value={newCampaign.domain}
-                    onValueChange={(value) => setNewCampaign({ ...newCampaign, domain: value })}
+                    value={newCampaign.domainId}
+                    onValueChange={(value) => setNewCampaign({ ...newCampaign, domainId: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select domain" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="company.com">company.com</SelectItem>
-                      <SelectItem value="marketing.company.com">marketing.company.com</SelectItem>
-                    </SelectContent>
+                  <SelectContent>
+                    {safeDomains.map((domain) => (
+                      <SelectItem key={domain.id} value={domain.id}>
+                        {domain.domain}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="emailList">Email List</Label>
                 <Select
-                  value={newCampaign.list}
-                  onValueChange={(value) => setNewCampaign({ ...newCampaign, list: value })}
+                  value={newCampaign.listId}
+                  onValueChange={(value) => setNewCampaign({ ...newCampaign, listId: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select email list" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newsletter">Newsletter Subscribers (15,420)</SelectItem>
-                    <SelectItem value="product-launch">Product Launch List (8,234)</SelectItem>
-                    <SelectItem value="vip">VIP Customers (1,876)</SelectItem>
-                  </SelectContent>
+                    <SelectContent>
+                      {safeEmailLists.map((list) => (
+                        <SelectItem key={list.id} value={list.id}>
+                          {list.name} ({list.totalEmails || 0} subscribers)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
@@ -525,7 +501,7 @@ export function Campaigns() {
             </TabsContent>
 
             <TabsContent value="content" className="space-y-4">
-              <div className="space-y-2 ">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="content">Email Content</Label>
                   <div className="flex items-center space-x-2">
@@ -551,7 +527,14 @@ export function Campaigns() {
             <TabsContent value="schedule" className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
-                  <Button variant="outline" className="flex-1 bg-transparent">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 bg-transparent"
+                    onClick={() => {
+                      setNewCampaign({ ...newCampaign, scheduledDate: undefined });
+                      handleCreateCampaign();
+                    }}
+                  >
                     <Send className="w-4 h-4 mr-2" />
                     Send Now
                   </Button>
@@ -591,10 +574,10 @@ export function Campaigns() {
 
           <div className="flex justify-end space-x-2 mt-6">
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Save Draft
+              {selectedCampaign ? "Cancel" : "Save Draft"}
             </Button>
-            <Button onClick={handleCreateCampaign} disabled={isLoading}>
-              Create Campaign
+            <Button onClick={handleCreateCampaign} disabled={isLoading || !newCampaign.name || !newCampaign.subject || !newCampaign.domainId || !newCampaign.listId}>
+              {selectedCampaign ? "Update Campaign" : "Create Campaign"}
             </Button>
           </div>
         </EnhancedModal>
@@ -613,7 +596,7 @@ export function Campaigns() {
             <Send className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">247</div>
+            <div className="text-2xl font-bold">{(campaigns || []).length}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+12</span> this month
             </p>
@@ -626,7 +609,9 @@ export function Campaigns() {
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1.2M</div>
+            <div className="text-2xl font-bold">
+              {campaignStats?.totalEmails ? campaignStats.totalEmails.toLocaleString() : "0"}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+8%</span> from last month
             </p>
@@ -639,7 +624,9 @@ export function Campaigns() {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24.5%</div>
+            <div className="text-2xl font-bold">
+              {campaignStats?.openRate ? `${campaignStats.openRate.toFixed(1)}%` : "0%"}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+2.1%</span> industry avg
             </p>
@@ -652,7 +639,9 @@ export function Campaigns() {
             <MousePointer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3.8%</div>
+            <div className="text-2xl font-bold">
+              {campaignStats?.clickRate ? `${campaignStats.clickRate.toFixed(1)}%` : "0%"}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-red-500">-0.3%</span> from last month
             </p>
@@ -677,20 +666,26 @@ export function Campaigns() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Campaigns</CardTitle>
-          <CardDescription>Manage and track all your email campaigns</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={campaignColumns}
-            data={campaigns}
-            searchPlaceholder="Search campaigns..."
-            onRowAction={handleCampaignAction}
-          />
-        </CardContent>
-      </Card>
+<Card>
+  <CardHeader>
+    <CardTitle>All Campaigns</CardTitle>
+    <CardDescription>Manage and track all your email campaigns</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {isLoading ? (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    ) : (
+      <DataTable
+        columns={campaignColumns}
+        data={filteredCampaigns}
+        searchPlaceholder="Search campaigns..."
+        onRowAction={handleCampaignAction}
+      />
+    )}
+  </CardContent>
+</Card>
     </div>
   )
 }

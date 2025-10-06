@@ -27,7 +27,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     
     try {
       await login(email, password);
-      router.push('/dashboard');
+      router.push('/');
     } catch (error) {
       // Error is handled in the store
       console.error('Login failed:', error);

@@ -5,25 +5,128 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
-import { Mail, Send, Globe, Eye, MousePointer } from "lucide-react"
+import { Mail, Send, Globe, Eye, MousePointer, TrendingUp, TrendingDown } from "lucide-react"
 
-const campaignData = [
-  { name: "Jan", sent: 4000, opened: 2400, clicked: 800 },
-  { name: "Feb", sent: 3000, opened: 1398, clicked: 600 },
-  { name: "Mar", sent: 2000, opened: 1800, clicked: 700 },
-  { name: "Apr", sent: 2780, opened: 1908, clicked: 850 },
-  { name: "May", sent: 1890, opened: 1200, clicked: 400 },
-  { name: "Jun", sent: 2390, opened: 1600, clicked: 650 },
-]
-
-const recentCampaigns = [
-  { name: "Summer Sale 2024", status: "sent", sent: 15420, opened: 8234, clicked: 1876, date: "2 hours ago" },
-  { name: "Product Launch", status: "sending", sent: 8500, opened: 0, clicked: 0, date: "In progress" },
-  { name: "Newsletter #47", status: "scheduled", sent: 0, opened: 0, clicked: 0, date: "Tomorrow 9:00 AM" },
-  { name: "Welcome Series", status: "draft", sent: 0, opened: 0, clicked: 0, date: "Draft" },
-]
+// Import our hooks
+import { 
+  useOverviewStats, 
+  useOverviewPerformance, 
+  useOverviewDomains, 
+  useRecentCampaigns 
+} from "@/hooks/useOverview"
+import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, AwaitedReactNode, Key } from "react"
 
 export function Overview() {
+  // Fetch data using our hooks
+  const { data: stats, isLoading: statsLoading } = useOverviewStats();
+  const { data: performanceData, isLoading: performanceLoading } = useOverviewPerformance();
+  const { data: domains, isLoading: domainsLoading } = useOverviewDomains();
+  const { data: recentCampaigns, isLoading: campaignsLoading } = useRecentCampaigns();
+
+
+
+  console.log(recentCampaigns, "==== recent campaigns ======" , campaignsLoading , "==== campaignsLoading ======  ")
+  // Calculate derived values from stats
+  const totalCampaigns = stats?.totalCampaigns || 0;
+  const totalEmailsSent = stats?.totalSent || 0;
+  const avgOpenRate = stats?.openRate || 0;
+  const avgClickRate = stats?.clickRate || 0;
+
+  // Show loading state
+  if (statsLoading || performanceLoading || domainsLoading || campaignsLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
+            <p className="text-muted-foreground">Monitor your email campaigns and performance</p>
+          </div>
+          <Button className="bg-primary hover:bg-primary/90">
+            <Send className="w-4 h-4 mr-2" />
+            New Campaign
+          </Button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-6 bg-muted rounded animate-pulse"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded animate-pulse"></div>
+                <div className="mt-2 h-4 bg-muted rounded animate-pulse w-3/4"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="h-6 bg-muted rounded animate-pulse w-1/3"></div>
+              <div className="h-4 bg-muted rounded animate-pulse w-1/2 mt-2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 bg-muted rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="h-6 bg-muted rounded animate-pulse w-1/3"></div>
+              <div className="h-4 bg-muted rounded animate-pulse w-1/2 mt-2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 bg-muted rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Campaigns */}
+        <Card>
+          <CardHeader>
+            <div className="h-6 bg-muted rounded animate-pulse w-1/3"></div>
+            <div className="h-4 bg-muted rounded animate-pulse w-1/2 mt-2"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-muted rounded-lg animate-pulse"></div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-24"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-6">
+                    <div className="text-center">
+                      <div className="h-4 bg-muted rounded animate-pulse w-16"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-8 mt-1"></div>
+                    </div>
+                    <div className="text-center">
+                      <div className="h-4 bg-muted rounded animate-pulse w-16"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-8 mt-1"></div>
+                    </div>
+                    <div className="text-center">
+                      <div className="h-4 bg-muted rounded animate-pulse w-16"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-8 mt-1"></div>
+                    </div>
+                    <div className="h-6 bg-muted rounded animate-pulse w-16"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -46,9 +149,10 @@ export function Overview() {
             <Send className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">247</div>
+            <div className="text-2xl font-bold">{totalCampaigns}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-500">+12%</span> from last month
+              {/* <span className="text-green-500">+12%</span> */}
+               from last month
             </p>
           </CardContent>
         </Card>
@@ -59,9 +163,15 @@ export function Overview() {
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1.2M</div>
+            <div className="text-2xl font-bold">
+              {totalEmailsSent >= 1000000 
+                ? `${(totalEmailsSent / 1000000).toFixed(1)}M` 
+                : totalEmailsSent.toLocaleString()
+              }
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-500">+8%</span> from last month
+              {/* <span className="text-green-500">+8%</span>  */}
+              from last month
             </p>
           </CardContent>
         </Card>
@@ -72,9 +182,10 @@ export function Overview() {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24.5%</div>
+            <div className="text-2xl font-bold">{avgOpenRate}%</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-500">+2.1%</span> from last month
+              {/* <span className="text-green-500">+2.1%</span>  */}
+              from last month
             </p>
           </CardContent>
         </Card>
@@ -85,9 +196,10 @@ export function Overview() {
             <MousePointer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3.8%</div>
+            <div className="text-2xl font-bold">{avgClickRate}%</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-red-500">-0.3%</span> from last month
+              {/* <span className="text-red-500">-0.3%</span>  */}
+              from last month
             </p>
           </CardContent>
         </Card>
@@ -102,7 +214,7 @@ export function Overview() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={campaignData}>
+              <AreaChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
                 <YAxis stroke="hsl(var(--muted-foreground))" />
@@ -148,53 +260,42 @@ export function Overview() {
             <CardDescription>Deliverability status of your domains</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-medium">company.com</span>
+            {domains?.map((domain: { domain: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined ; reputation: number | null | undefined | any}, index: Key | null | undefined | any) => (
+              <div key={index} className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Globe className="w-4 h-4 text-green-500" />
+                    <span className="text-sm font-medium">{domain.domain}</span>
+                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className={
+                      Number(domain?.reputation) > 80 
+                        ? "bg-green-500/10 text-green-500" 
+                        : Number(domain?.reputation) > 60 
+                          ? "bg-yellow-500/10 text-yellow-500" 
+                          : "bg-red-500/10 text-red-500"
+                    }
+                  >
+                    {Number(domain?.reputation) > 80 ? "Excellent" : Number(domain?.reputation) > 60 ? "Good" : "Needs Attention"}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="bg-green-500/10 text-green-500">
-                  Excellent
-                </Badge>
+                <Progress value={Number(domain?.reputation)} className="h-2" />
               </div>
-              <Progress value={95} className="h-2" />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium">marketing.company.com</span>
-                </div>
-                <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500">
-                  Good
-                </Badge>
-              </div>
-              <Progress value={78} className="h-2" />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-4 h-4 text-red-500" />
-                  <span className="text-sm font-medium">promo.company.com</span>
-                </div>
-                <Badge variant="secondary" className="bg-red-500/10 text-red-500">
-                  Needs Attention
-                </Badge>
-              </div>
-              <Progress value={45} className="h-2" />
-            </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Campaigns */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Recent Campaigns</CardTitle>
           <CardDescription>Latest email campaigns and their performance</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentCampaigns.map((campaign, index) => (
+            {(recentCampaigns !== undefined  ||  recentCampaigns !== null) && recentCampaigns.map((campaign: { name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; date: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; sent: { toLocaleString: () => string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined }; opened: { toLocaleString: () => string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined }; clicked: { toLocaleString: () => string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined }; status: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<AwaitedReactNode> | null | undefined }, index: Key | null | undefined) => (
               <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -233,10 +334,10 @@ export function Overview() {
                   </Badge>
                 </div>
               </div>
-            ))}
+            )) }
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   )
 }

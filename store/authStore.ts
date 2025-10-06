@@ -22,7 +22,7 @@ interface AuthState {
   clearError: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -36,13 +36,17 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post(`${API_URL}/api/auth/login`, {
+          const response = await axios.post(`${API_URL}/auth/login`, {
             email,
             password,
           });
           
+
+
           const { user, token } = response.data;
-          
+
+        //  [debug]  section 
+          // console.log("Login successful:", user , token, "[Debug] Auth Store State:" , get());
           set({
             user,
             token,
@@ -62,7 +66,7 @@ export const useAuthStore = create<AuthState>()(
       register: async (email: string, password: string, name?: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post(`${API_URL}/api/auth/register`, {
+          const response = await axios.post(`${API_URL}/auth/register`, {
             email,
             password,
             name,

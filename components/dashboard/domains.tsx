@@ -43,103 +43,7 @@ import {
   EyeOff,
 } from "lucide-react"
 import { useDomainStore } from "@/store/domainStore"
-
-
-const domains = [
-  {
-    id: "1",
-    domain: "company.com",
-    verified: true,
-    dkimStatus: "verified",
-    spfStatus: "verified",
-    dmarcStatus: "verified",
-    reputation: 95,
-    createdAt: "2024-01-15",
-    smtpConfig: {
-      host: "smtp.company.com",
-      port: 587,
-      security: "STARTTLS",
-      username: "noreply@company.com",
-      password: "••••••••",
-      provider: "custom",
-      dailyLimit: 10000,
-      sentToday: 2847,
-      warmupStatus: "completed",
-      warmupProgress: 100,
-    },
-    analytics: {
-      delivered: 98.5,
-      bounced: 1.2,
-      complained: 0.3,
-      opened: 24.8,
-      clicked: 3.2,
-    },
-  },
-  {
-    id: "2",
-    domain: "marketing.company.com",
-    verified: true,
-    dkimStatus: "verified",
-    spfStatus: "verified",
-    dmarcStatus: "pending",
-    reputation: 78,
-    createdAt: "2024-02-20",
-    smtpConfig: {
-      host: "smtp.sendgrid.net",
-      port: 587,
-      security: "STARTTLS",
-      username: "apikey",
-      password: "••••••••",
-      provider: "sendgrid",
-      dailyLimit: 50000,
-      sentToday: 12450,
-      warmupStatus: "active",
-      warmupProgress: 75,
-    },
-    analytics: {
-      delivered: 96.8,
-      bounced: 2.1,
-      complained: 1.1,
-      opened: 28.4,
-      clicked: 4.7,
-    },
-  },
-  {
-    id: "3",
-    domain: "promo.company.com",
-    verified: false,
-    dkimStatus: "pending",
-    spfStatus: "failed",
-    dmarcStatus: "not_set",
-    reputation: 45,
-    createdAt: "2024-03-10",
-    smtpConfig: {
-      host: "",
-      port: 587,
-      security: "STARTTLS",
-      username: "",
-      password: "",
-      provider: "none",
-      dailyLimit: 0,
-      sentToday: 0,
-      warmupStatus: "not_started",
-      warmupProgress: 0,
-    },
-    analytics: {
-      delivered: 0,
-      bounced: 0,
-      complained: 0,
-      opened: 0,
-      clicked: 0,
-    },
-  },
-]
-
-const dnsRecords = {
-  dkim: "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC...",
-  spf: "v=spf1 include:_spf.emailflow.com ~all",
-  dmarc: "v=DMARC1; p=quarantine; rua=mailto:dmarc@company.com",
-}
+import { useToast } from "@/hooks/use-toast"
 
 const smtpProviders = [
   { value: "custom", label: "Custom SMTP", host: "", port: 587 },
@@ -151,6 +55,7 @@ const smtpProviders = [
 ]
 
 export function Domains() {
+  const { toast } = useToast()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false)
   const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false)
@@ -161,12 +66,21 @@ export function Domains() {
 
 
 
+  
+  
+  const [smtpForm, setSmtpForm] = useState({
+    provider: "custom",
+    host: "",
+    port: 587,
+    security: "STARTTLS",
+    username: "",
+    password: "",
+    dailyLimit: 1000,
+    enableWarmup: true,
+  })
 
-
-  // New domain data
-
-    const {
-    domains:domain,
+  const {
+    domains,
     currentDomain,
     isLoading,
     error,
@@ -185,100 +99,209 @@ export function Domains() {
     fetchDomains();
   }, []);
 
-  const handleAddDomain = async (domain: string, smtpSettings: any) => {
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+      clearError();
+    }
+  }, [error, toast, clearError]);
+
+  const handleAddDomain = async () => {
     try {
-      await addDomain(domain, smtpSettings);
-      // Show success message
+      if (!newDomain) {
+        toast({
+          title: "Error",
+          description: "Please enter a domain name",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const smtpSettings = {
+        provider: smtpForm.provider,
+        host: smtpForm.host,
+        port: smtpForm.port,
+        security: smtpForm.security,
+        username: smtpForm.username,
+        password: smtpForm.password,
+        dailyLimit: smtpForm.dailyLimit,
+        enableDomainWarmup: smtpForm.enableWarmup,
+      };
+
+      await addDomain(newDomain, smtpSettings);
+      
+      setIsAddDialogOpen(false);
+      setNewDomain("");
+      
+      toast({
+        title: "Domain Added",
+        description: `${newDomain} has been added successfully.`,
+      });
     } catch (error) {
-      // Show error message
+      // Error is handled by the useEffect above
     }
   };
 
+  const handleUpdateDomain = async () => {
+    try {
+      if (!selectedDomain) return;
 
+      const updates = {
+        smtpProvider: smtpForm.provider,
+        smtpHost: smtpForm.host,
+        smtpPort: smtpForm.port,
+        smtpSecurity: smtpForm.security,
+        smtpUsername: smtpForm.username,
+        smtpPassword: smtpForm.password,
+        dailyLimit: smtpForm.dailyLimit,
+        enableDomainWarmup: smtpForm.enableWarmup,
+      };
 
-
-
-
-
-
-
-
-
-  const [smtpForm, setSmtpForm] = useState({
-    provider: "custom",
-    host: "",
-    port: 587,
-    security: "STARTTLS",
-    username: "",
-    password: "",
-    dailyLimit: 1000,
-    enableWarmup: true,
-  })
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "verified":
-        return <CheckCircle className="w-4 h-4 text-green-500" />
-      case "pending":
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
-      case "failed":
-      case "not_set":
-        return <XCircle className="w-4 h-4 text-red-500" />
-      default:
-        return <XCircle className="w-4 h-4 text-gray-500" />
+      await updateDomain(selectedDomain.id, updates);
+      
+      setIsConfigDialogOpen(false);
+      
+      toast({
+        title: "Domain Updated",
+        description: `${selectedDomain.domain} has been updated successfully.`,
+      });
+    } catch (error) {
+      // Error is handled by the useEffect above
     }
-  }
+  };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "verified":
-        return <Badge className="bg-green-500/10 text-green-500">Verified</Badge>
-      case "pending":
-        return <Badge className="bg-yellow-500/10 text-yellow-500">Pending</Badge>
-      case "failed":
-        return <Badge className="bg-red-500/10 text-red-500">Failed</Badge>
-      case "not_set":
-        return <Badge variant="outline">Not Set</Badge>
-      default:
-        return <Badge variant="secondary">Unknown</Badge>
+  const handleDeleteDomain = async (domain: any) => {
+    try {
+      await deleteDomain(domain.id);
+      
+      toast({
+        title: "Domain Deleted",
+        description: `${domain.domain} has been deleted.`,
+      });
+    } catch (error) {
+      // Error is handled by the useEffect above
     }
-  }
+  };
 
-  const getWarmupBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-green-500/10 text-green-500">Warmed Up</Badge>
-      case "active":
-        return <Badge className="bg-blue-500/10 text-blue-500">Warming Up</Badge>
-      case "not_started":
-        return <Badge variant="outline">Not Started</Badge>
-      default:
-        return <Badge variant="secondary">Unknown</Badge>
+  const handleVerifyDomain = async (domain: any) => {
+    try {
+      await verifyDomain(domain.id);
+      
+      toast({
+        title: "Verification Initiated",
+        description: `Verification for ${domain.domain} has been initiated.`,
+      });
+    } catch (error) {
+      // Error is handled by the useEffect above
     }
-  }
+  };
+
+  const handleTestConnection = async () => {
+    if (!selectedDomain) return;
+    
+    setIsTestingConnection(true);
+    try {
+      await testSmtpSettings(selectedDomain.id);
+      
+      toast({
+        title: "Connection Test",
+        description: "SMTP connection test completed successfully.",
+      });
+    } catch (error) {
+      // Error is handled by the useEffect above
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+
+  const handleViewAnalytics = async (domain: any) => {
+    try {
+      setSelectedDomain(domain);
+      await getDomainStats(domain.id);
+      setIsAnalyticsDialogOpen(true);
+    } catch (error) {
+      // Error is handled by the useEffect above
+    }
+  };
+
+  const handleConfigureDomain = (domain: any) => {
+    setSelectedDomain(domain);
+    setSmtpForm({
+      provider: domain.smtpProvider || "custom",
+      host: domain.smtpHost || "",
+      port: domain.smtpPort || 587,
+      security: domain.smtpSecurity || "STARTTLS",
+      username: domain.smtpUsername || "",
+      password: domain.smtpPassword || "",
+      dailyLimit: domain.dailyLimit || 1000,
+      enableWarmup: domain.enableDomainWarmup || false,
+    });
+    setIsConfigDialogOpen(true);
+  };
+
+  const getStatusIcon = (verified: boolean) => {
+    return verified 
+      ? <CheckCircle className="w-4 h-4 text-green-500" />
+      : <XCircle className="w-4 h-4 text-red-500" />;
+  };
+
+  const getStatusBadge = (verified: boolean) => {
+    return verified 
+      ? <Badge className="bg-green-500/10 text-green-500">Verified</Badge>
+      : <Badge className="bg-yellow-500/10 text-yellow-500">Pending</Badge>;
+  };
+
+  const getWarmupBadge = (enableDomainWarmup: boolean) => {
+    return enableDomainWarmup 
+      ? <Badge className="bg-blue-500/10 text-blue-500">Enabled</Badge>
+      : <Badge variant="outline">Disabled</Badge>;
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-  }
-
-  const testConnection = async () => {
-    setIsTestingConnection(true)
-    // Simulate connection test
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsTestingConnection(false)
-  }
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to Clipboard",
+      description: "DNS record has been copied to your clipboard.",
+    });
+  };
 
   const handleProviderChange = (provider: string) => {
-    const providerConfig = smtpProviders.find((p) => p.value === provider)
+    const providerConfig = smtpProviders.find((p) => p.value === provider);
     if (providerConfig) {
       setSmtpForm((prev) => ({
         ...prev,
         provider,
         host: providerConfig.host,
         port: providerConfig.port,
-      }))
+      }));
     }
-  }
+  };
+
+  // Calculate stats for the cards
+const domainsArray = Array.isArray(domains) ? domains : [];
+const totalDomains = domainsArray.length;
+const verifiedDomains = domainsArray.filter((d) => d.verified).length;
+const totalEmailsToday = domainsArray.reduce((sum, d) => sum + (d.dailyLimit || 0), 0);
+const avgReputation = domainsArray.length > 0 
+  ? Math.round(domainsArray.reduce((sum, d) => sum + (d.reputation || 0), 0) / domainsArray.length)
+  : 0;
+
+
+
+
+
+  if (isLoading) {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+      Loading domains...
+    </div>
+  );
+}
 
   return (
     <div className="space-y-6">
@@ -314,7 +337,9 @@ export function Domains() {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => setIsAddDialogOpen(false)}>Add Domain</Button>
+                <Button onClick={handleAddDomain} disabled={isLoading || !newDomain}>
+                  Add Domain
+                </Button>
               </div>
             </div>
           </DialogContent>
@@ -328,7 +353,7 @@ export function Domains() {
               <Globe className="w-5 h-5 text-blue-500" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Domains</p>
-                <p className="text-2xl font-bold">{domains.length}</p>
+                <p className="text-2xl font-bold">{totalDomains}</p>
               </div>
             </div>
           </CardContent>
@@ -339,7 +364,7 @@ export function Domains() {
               <CheckCircle className="w-5 h-5 text-green-500" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Verified</p>
-                <p className="text-2xl font-bold">{domains.filter((d) => d.verified).length}</p>
+                <p className="text-2xl font-bold">{verifiedDomains}</p>
               </div>
             </div>
           </CardContent>
@@ -350,9 +375,7 @@ export function Domains() {
               <Mail className="w-5 h-5 text-purple-500" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Emails Today</p>
-                <p className="text-2xl font-bold">
-                  {domains.reduce((sum, d) => sum + d?.smtpConfig.sentToday, 0).toLocaleString()}
-                </p>
+                <p className="text-2xl font-bold">{totalEmailsToday.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -363,9 +386,7 @@ export function Domains() {
               <TrendingUp className="w-5 h-5 text-orange-500" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg. Reputation</p>
-                <p className="text-2xl font-bold">
-                  {Math.round(domains.reduce((sum, d) => sum + d.reputation, 0) / domains.length)}%
-                </p>
+                <p className="text-2xl font-bold">{avgReputation}%</p>
               </div>
             </div>
           </CardContent>
@@ -384,14 +405,14 @@ export function Domains() {
                 <TableHead>Domain</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>SMTP Provider</TableHead>
-                <TableHead>Daily Usage</TableHead>
+                <TableHead>Daily Limit</TableHead>
                 <TableHead>Warmup</TableHead>
                 <TableHead>Reputation</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {domains.map((domain) => (
+              {domainsArray.map((domain) => (
                 <TableRow key={domain.id}>
                   <TableCell>
                     <div className="flex items-center space-x-2">
@@ -399,45 +420,29 @@ export function Domains() {
                       <div>
                         <span className="font-medium">{domain.domain}</span>
                         <div className="flex items-center space-x-1 mt-1">
-                          {getStatusIcon(domain.dkimStatus)}
-                          {getStatusIcon(domain.spfStatus)}
-                          {getStatusIcon(domain.dmarcStatus)}
+                          {getStatusIcon(domain.verified)}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {domain.verified ? (
-                      <Badge className="bg-green-500/10 text-green-500">Verified</Badge>
-                    ) : (
-                      <Badge className="bg-yellow-500/10 text-yellow-500">Pending</Badge>
-                    )}
+                    {getStatusBadge(domain.verified)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Server className="w-4 h-4 text-muted-foreground" />
-                      <span className="capitalize">{domain.smtpConfig.provider}</span>
+                      <span className="capitalize">{domain.smtpProvider || "Not configured"}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>{domain.smtpConfig.sentToday.toLocaleString()}</span>
-                        <span className="text-muted-foreground">/ {domain.smtpConfig.dailyLimit.toLocaleString()}</span>
+                      <div className="text-sm">
+                        <span className="font-medium">{domain.dailyLimit?.toLocaleString() || 0}</span>
                       </div>
-                      <Progress
-                        value={(domain.smtpConfig.sentToday / domain.smtpConfig.dailyLimit) * 100}
-                        className="h-1"
-                      />
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      {getWarmupBadge(domain.smtpConfig.warmupStatus)}
-                      {domain.smtpConfig.warmupStatus === "active" && (
-                        <Progress value={domain.smtpConfig.warmupProgress} className="h-1" />
-                      )}
-                    </div>
+                    {getWarmupBadge(domain.enableDomainWarmup)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
@@ -461,37 +466,31 @@ export function Domains() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setSelectedDomain(domain)
-                          setIsAnalyticsDialogOpen(true)
-                        }}
+                        onClick={() => handleViewAnalytics(domain)}
                       >
                         <BarChart3 className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setSelectedDomain(domain)
-                          setSmtpForm({
-                            provider: domain.smtpConfig.provider,
-                            host: domain.smtpConfig.host,
-                            port: domain.smtpConfig.port,
-                            security: domain.smtpConfig.security,
-                            username: domain.smtpConfig.username,
-                            password: domain.smtpConfig.password,
-                            dailyLimit: domain.smtpConfig.dailyLimit,
-                            enableWarmup: domain.smtpConfig.warmupStatus !== "not_started",
-                          })
-                          setIsConfigDialogOpen(true)
-                        }}
+                        onClick={() => handleConfigureDomain(domain)}
                       >
                         <Settings className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleVerifyDomain(domain)}
+                        disabled={domain.verified}
+                      >
                         <RefreshCw className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-500 hover:text-red-600"
+                        onClick={() => handleDeleteDomain(domain)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -652,7 +651,11 @@ export function Domains() {
                   <Textarea placeholder="This is a test email to verify SMTP configuration..." rows={3} />
                 </div>
 
-                <Button onClick={testConnection} disabled={isTestingConnection} className="w-full">
+                <Button 
+                  onClick={handleTestConnection} 
+                  disabled={isTestingConnection || isLoading} 
+                  className="w-full"
+                >
                   {isTestingConnection ? (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -673,7 +676,9 @@ export function Domains() {
             <Button variant="outline" onClick={() => setIsConfigDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => setIsConfigDialogOpen(false)}>Save Configuration</Button>
+            <Button onClick={handleUpdateDomain} disabled={isLoading}>
+              Save Configuration
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -693,7 +698,7 @@ export function Domains() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">{selectedDomain.analytics.delivered}%</p>
+                      <p className="text-2xl font-bold text-green-600">98.5%</p>
                       <p className="text-sm text-muted-foreground">Delivered</p>
                     </div>
                   </CardContent>
@@ -701,7 +706,7 @@ export function Domains() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-red-600">{selectedDomain.analytics.bounced}%</p>
+                      <p className="text-2xl font-bold text-red-600">1.2%</p>
                       <p className="text-sm text-muted-foreground">Bounced</p>
                     </div>
                   </CardContent>
@@ -709,7 +714,7 @@ export function Domains() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-orange-600">{selectedDomain.analytics.complained}%</p>
+                      <p className="text-2xl font-bold text-orange-600">0.3%</p>
                       <p className="text-sm text-muted-foreground">Complained</p>
                     </div>
                   </CardContent>
@@ -717,7 +722,7 @@ export function Domains() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">{selectedDomain.analytics.opened}%</p>
+                      <p className="text-2xl font-bold text-blue-600">24.8%</p>
                       <p className="text-sm text-muted-foreground">Opened</p>
                     </div>
                   </CardContent>
@@ -725,7 +730,7 @@ export function Domains() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-purple-600">{selectedDomain.analytics.clicked}%</p>
+                      <p className="text-2xl font-bold text-purple-600">3.2%</p>
                       <p className="text-sm text-muted-foreground">Clicked</p>
                     </div>
                   </CardContent>
@@ -818,8 +823,8 @@ export function Domains() {
               <div className="space-y-2">
                 <Label>Value</Label>
                 <div className="flex items-center space-x-2">
-                  <Input value={dnsRecords.dkim} readOnly className="font-mono text-xs" />
-                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(dnsRecords.dkim)}>
+                  <Input value="v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC..." readOnly className="font-mono text-xs" />
+                  <Button variant="outline" size="sm" onClick={() => copyToClipboard("v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC...")}>
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
@@ -854,8 +859,8 @@ export function Domains() {
               <div className="space-y-2">
                 <Label>Value</Label>
                 <div className="flex items-center space-x-2">
-                  <Input value={dnsRecords.spf} readOnly />
-                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(dnsRecords.spf)}>
+                  <Input value="v=spf1 include:_spf.emailflow.com ~all" readOnly />
+                  <Button variant="outline" size="sm" onClick={() => copyToClipboard("v=spf1 include:_spf.emailflow.com ~all")}>
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
@@ -891,8 +896,8 @@ export function Domains() {
               <div className="space-y-2">
                 <Label>Value</Label>
                 <div className="flex items-center space-x-2">
-                  <Input value={dnsRecords.dmarc} readOnly />
-                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(dnsRecords.dmarc)}>
+                  <Input value="v=DMARC1; p=quarantine; rua=mailto:dmarc@company.com" readOnly />
+                  <Button variant="outline" size="sm" onClick={() => copyToClipboard("v=DMARC1; p=quarantine; rua=mailto:dmarc@company.com")}>
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>

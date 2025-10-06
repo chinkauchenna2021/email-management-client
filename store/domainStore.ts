@@ -45,7 +45,7 @@ interface DomainState {
 export const useDomainStore = create<DomainState>()(
   persist(
     (set, get) => ({
-      domains: [],
+      domains: [], // This should already be an array
       currentDomain: null,
       isLoading: false,
       error: null,
@@ -54,9 +54,10 @@ export const useDomainStore = create<DomainState>()(
         set({ isLoading: true, error: null });
         try {
           const domains = await DomainService.getUserDomains();
-          set({ domains, isLoading: false });
+          // Double ensure it's an array
+          set({ domains: Array.isArray(domains) ? domains : [], isLoading: false });
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error.message, isLoading: false, domains: [] });
         }
       },
 
@@ -65,7 +66,8 @@ export const useDomainStore = create<DomainState>()(
         try {
           const result = await DomainService.addDomain(domain, smtpSettings);
           set((state) => ({
-            domains: [...state.domains, result.domain],
+            // Ensure state.domains is always an array
+            domains: [...(state.domains || []), result.domain],
             isLoading: false,
           }));
           return result;
@@ -80,7 +82,8 @@ export const useDomainStore = create<DomainState>()(
         try {
           const updatedDomain = await DomainService.updateDomainSettings(domainId, updates);
           set((state) => ({
-            domains: state.domains.map(d => d.id === domainId ? updatedDomain : d),
+            // Ensure state.domains is always an array
+            domains: (state.domains || []).map(d => d.id === domainId ? updatedDomain : d),
             currentDomain: state.currentDomain?.id === domainId ? updatedDomain : state.currentDomain,
             isLoading: false,
           }));
@@ -95,7 +98,8 @@ export const useDomainStore = create<DomainState>()(
         try {
           await DomainService.deleteDomain(domainId);
           set((state) => ({
-            domains: state.domains.filter(d => d.id !== domainId),
+            // Ensure state.domains is always an array
+            domains: (state.domains || []).filter(d => d.id !== domainId),
             currentDomain: state.currentDomain?.id === domainId ? null : state.currentDomain,
             isLoading: false,
           }));
@@ -110,7 +114,8 @@ export const useDomainStore = create<DomainState>()(
         try {
           const result = await DomainService.verifyDomain(domainId);
           set((state) => ({
-            domains: state.domains.map(d => d.id === domainId ? result.domain : d),
+            // Ensure state.domains is always an array
+            domains: (state.domains || []).map(d => d.id === domainId ? result.domain : d),
             currentDomain: state.currentDomain?.id === domainId ? result.domain : state.currentDomain,
             isLoading: false,
           }));
@@ -151,12 +156,24 @@ export const useDomainStore = create<DomainState>()(
 
       clearError: () => set({ error: null }),
     }),
-    {
+ {
       name: 'domain-storage',
       partialize: (state) => ({
         domains: state.domains,
         currentDomain: state.currentDomain,
       }),
+      merge: (persistedState: any, currentState) => {
+        // Ensure domains is always an array during merge
+        const domains = Array.isArray(persistedState?.domains) 
+          ? persistedState.domains 
+          : [];
+        
+        return {
+          ...currentState,
+          ...persistedState,
+          domains,
+        };
+      },
     }
   )
 );

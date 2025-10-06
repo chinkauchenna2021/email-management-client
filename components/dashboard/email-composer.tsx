@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-
+import { useEffect, useState, useMemo } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
@@ -52,12 +51,10 @@ import {
   Strikethrough,
   X,
 } from "lucide-react"
-import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { useCampaignStore } from "@/store/campaignStore"
-import {  useEmailListStore } from "@/store/emailListStore"
+import { useEmailListStore } from "@/store/emailListStore"
 import { useTemplateStore } from "@/store/templateStore"
-
 
 interface Campaign {
   id: string
@@ -68,15 +65,6 @@ interface Campaign {
   description?: string
 }
 
-interface EmailComposerProps {
-  campaigns?: Campaign[]
-  selectedCampaign?: Campaign
-  onCampaignSelect?: (campaign: Campaign) => void
-  onSave?: (data: EmailData) => Promise<void>
-  onSend?: (data: EmailData) => Promise<void>
-  onPreview?: (data: EmailData) => void
-}
-
 interface EmailData {
   subject: string
   content: string
@@ -84,60 +72,9 @@ interface EmailData {
   campaignId?: string
 }
 
-// Mock campaigns data
-const mockCampaigns: Campaign[] = [
-  {
-    id: "1",
-    name: "Summer Sale 2024",
-    emailCount: 15420,
-    status: "active",
-    createdAt: new Date("2024-06-01"),
-    description: "Promotional campaign for summer products",
-  },
-  {
-    id: "2",
-    name: "Newsletter Subscribers",
-    emailCount: 8750,
-    status: "active",
-    createdAt: new Date("2024-05-15"),
-    description: "Weekly newsletter recipients",
-  },
-  {
-    id: "3",
-    name: "VIP Customers",
-    emailCount: 2340,
-    status: "active",
-    createdAt: new Date("2024-05-20"),
-    description: "Premium tier customers",
-  },
-  {
-    id: "4",
-    name: "Product Launch Beta",
-    emailCount: 1250,
-    status: "draft",
-    createdAt: new Date("2024-06-10"),
-    description: "Beta testers for new product",
-  },
-  {
-    id: "5",
-    name: "Holiday Campaign",
-    emailCount: 22100,
-    status: "completed",
-    createdAt: new Date("2024-04-01"),
-    description: "Holiday season promotional emails",
-  },
-]
-
-export function EmailComposer({
-  campaigns = mockCampaigns,
-  selectedCampaign,
-  onCampaignSelect,
-  onSave,
-  onSend,
-  onPreview,
-}: EmailComposerProps) {
+export function EmailComposer() {
   const [subject, setSubject] = useState("")
-  const [currentCampaign, setCurrentCampaign] = useState<Campaign | undefined>(selectedCampaign)
+  const [currentCampaign, setCurrentCampaign] = useState<Campaign | undefined>(undefined)
   const [campaignSelectorOpen, setCampaignSelectorOpen] = useState(false)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -152,25 +89,57 @@ export function EmailComposer({
   const [imageAlt, setImageAlt] = useState("")
   const { toast } = useToast()
 
+  const { 
+    campaigns, 
+    currentCampaign: storeCurrentCampaign,
+    isLoading, 
+    error, 
+    createCampaign, 
+    updateCampaign, 
+    sendCampaign,
+    fetchCampaigns,
+    clearError 
+  } = useCampaignStore()
+  
+  const { emailLists, fetchEmailLists } = useEmailListStore()
+  const { templates, fetchTemplates } = useTemplateStore()
 
+  useEffect(() => {
+    fetchCampaigns()
+    fetchEmailLists()
+    fetchTemplates()
+  }, [])
 
-  const { createCampaign } = useCampaignStore();
-  const { emailLists } = useEmailListStore();
-  const { templates } = useTemplateStore();
-
-  const handleSendCampaign = async (campaignData: any) => {
-    try {
-      await createCampaign(campaignData);
-      // Show success message
-    } catch (error) {
-      // Show error message
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      })
+      clearError()
     }
-  };
+  }, [error, toast, clearError])
 
+const campaignsArray = Array.isArray(campaigns) ? campaigns : [];
+const emailListsArray = Array.isArray(emailLists) ? emailLists : [];
 
-
-
-
+// Map store campaigns to component interface
+const mappedCampaigns = useMemo(() => {
+  return campaignsArray.map(campaign => {
+    const emailList = emailListsArray.find(list => list.id === campaign.listId);
+    return {
+      id: campaign.id,
+      name: campaign.name,
+      emailCount: emailList ? emailList.subscriberCount : 0,
+      status: 
+        campaign.status === 'DRAFT' ? 'draft' :
+        campaign.status === 'SENT' ? 'completed' : 'active',
+      createdAt: new Date(campaign.createdAt),
+      description: campaign.subject
+    };
+  });
+}, [campaignsArray, emailListsArray]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -210,7 +179,7 @@ export function EmailComposer({
     },
   })
 
-  useState(() => {
+  useEffect(() => {
     const savedTemplate = localStorage.getItem("selectedTemplate")
     if (savedTemplate) {
       try {
@@ -228,11 +197,10 @@ export function EmailComposer({
         console.error("Failed to load template:", error)
       }
     }
-  })
+  }, [editor, toast])
 
-  const handleCampaignSelect = (campaign: Campaign) => {
+  const handleCampaignSelect = (campaign: Campaign | any) => {
     setCurrentCampaign(campaign)
-    onCampaignSelect?.(campaign)
     setCampaignSelectorOpen(false)
     toast({
       title: "Campaign selected",
@@ -244,15 +212,13 @@ export function EmailComposer({
     if (!editor || (!subject.trim() && !editor.getText().trim())) return
 
     try {
-      const data: EmailData = {
-        subject,
-        content: editor.getText(),
-        htmlContent: editor.getHTML(),
-        campaignId: currentCampaign?.id,
+      if (currentCampaign) {
+        await updateCampaign(currentCampaign.id, {
+          subject,
+          content: editor.getText(),
+        })
+        setLastSaved(new Date())
       }
-
-      await onSave?.(data)
-      setLastSaved(new Date())
     } catch (error) {
       console.error("Auto-save failed:", error)
     }
@@ -263,19 +229,72 @@ export function EmailComposer({
 
     setIsSaving(true)
     try {
-      const data: EmailData = {
-        subject,
-        content: editor.getText(),
-        htmlContent: editor.getHTML(),
-        campaignId: currentCampaign?.id,
-      }
+      if (currentCampaign) {
+        await updateCampaign(currentCampaign.id, {
+          subject,
+          content: editor.getText(),
+          status: 'DRAFT'
+        })
+        setLastSaved(new Date())
+        toast({
+          title: "Draft saved",
+          description: "Your email has been saved successfully.",
+        })
+      } else {
+        // Create a new campaign if none is selected
+        if (!subject.trim()) {
+          toast({
+            title: "Subject required",
+            description: "Please add a subject line before saving.",
+            variant: "destructive",
+          })
+          return
+        }
 
-      await onSave?.(data)
-      setLastSaved(new Date())
-      toast({
-        title: "Draft saved",
-        description: "Your email has been saved successfully.",
-      })
+        if (!editor.getText().trim()) {
+          toast({
+            title: "Content required",
+            description: "Please add some content before saving.",
+            variant: "destructive",
+          })
+          return
+        }
+
+        const newCampaign = await createCampaign({
+          name: subject,
+          subject,
+          content: editor.getText(),
+          status: 'DRAFT',
+          domainId: '', // Will need to be set by user
+          listId: '', // Will need to be set by user
+        }) as any
+
+        if (newCampaign && typeof newCampaign === "object" && "listId" in newCampaign) {
+          // Map the new campaign to our interface
+          const emailList = emailLists.find(list => list.id === newCampaign.listId)
+          const mappedCampaign: Campaign = {
+            id: newCampaign.id,
+            name: newCampaign.name,
+            emailCount: emailList ? emailList.subscriberCount : 0,
+            status: 'draft',
+            createdAt: new Date(newCampaign.createdAt),
+            description: newCampaign.subject
+          }
+
+          setCurrentCampaign(mappedCampaign)
+          setLastSaved(new Date())
+          toast({
+            title: "Campaign created",
+            description: "Your campaign has been created and saved as a draft.",
+          })
+        } else {
+          toast({
+            title: "Create failed",
+            description: "Failed to create campaign. Please try again.",
+            variant: "destructive",
+          })
+        }
+      }
     } catch (error) {
       toast({
         title: "Save failed",
@@ -319,14 +338,16 @@ export function EmailComposer({
 
     setIsSending(true)
     try {
-      const data: EmailData = {
+      // Update the campaign with the latest content
+      await updateCampaign(currentCampaign.id, {
         subject,
         content: editor.getText(),
-        htmlContent: editor.getHTML(),
-        campaignId: currentCampaign.id,
-      }
+        status: 'READY'
+      })
 
-      await onSend?.(data)
+      // Send the campaign
+      await sendCampaign(currentCampaign.id)
+      
       toast({
         title: "Campaign sent!",
         description: `Your email has been sent to ${currentCampaign.emailCount.toLocaleString()} recipients.`,
@@ -354,7 +375,6 @@ export function EmailComposer({
 
     setPreviewHtml(data.htmlContent)
     setIsPreviewMode(true)
-    onPreview?.(data)
   }
 
   const handleInsertLink = () => {
@@ -433,6 +453,17 @@ export function EmailComposer({
         </div>
       </div>
     )
+  }
+
+    if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading campaigns...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -545,7 +576,7 @@ export function EmailComposer({
                   <CommandList>
                     <ScrollArea className="h-[300px]">
                       <CommandGroup>
-                        {campaigns.map((campaign) => (
+                        {mappedCampaigns.map((campaign) => (
                           <CommandItem
                             key={campaign.id}
                             value={campaign.name}

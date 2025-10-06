@@ -15,12 +15,12 @@ export function middleware(request: NextRequest) {
   
   // If accessing a protected route without a token, redirect to login
   if (isProtectedPath && !token) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
   
   // If accessing login/register with a token, redirect to dashboard
-  if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register') && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  if ((request.nextUrl.pathname === '/auth/login' || request.nextUrl.pathname === '/auth/register') && token) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
   
   return NextResponse.next();

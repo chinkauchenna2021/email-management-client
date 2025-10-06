@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -37,7 +37,7 @@ api.interceptors.response.use(
       
       // Clear auth state and redirect to login
       useAuthStore.getState().logout();
-      window.location.href = '/login';
+      window.location.href = '/auth/login';
     }
     
     return Promise.reject(error);

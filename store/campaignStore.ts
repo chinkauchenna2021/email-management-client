@@ -52,7 +52,7 @@ interface CampaignState {
 export const useCampaignStore = create<CampaignState>()(
   persist(
     (set, get) => ({
-      campaigns: [],
+      campaigns: [], // Ensure this is always an array
       currentCampaign: null,
       campaignStats: null,
       isLoading: false,
@@ -62,7 +62,8 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isLoading: true, error: null });
         try {
           const campaigns = await CampaignService.getUserCampaigns();
-          set({ campaigns, isLoading: false });
+          // Ensure campaigns is always an array
+          set({ campaigns: campaigns || [], isLoading: false });
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
         }
@@ -73,7 +74,8 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           const campaign = await CampaignService.createCampaign(campaignData);
           set((state) => ({
-            campaigns: [campaign, ...state.campaigns],
+            // Ensure state.campaigns is always an array
+            campaigns: [campaign, ...(state.campaigns || [])],
             isLoading: false,
           }));
           return campaign;
@@ -88,7 +90,8 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           const updatedCampaign = await CampaignService.updateCampaign(campaignId, updates);
           set((state) => ({
-            campaigns: state.campaigns.map(c => c.id === campaignId ? updatedCampaign : c),
+            // Ensure state.campaigns is always an array
+            campaigns: (state.campaigns || []).map(c => c.id === campaignId ? updatedCampaign : c),
             currentCampaign: state.currentCampaign?.id === campaignId ? updatedCampaign : state.currentCampaign,
             isLoading: false,
           }));
@@ -103,7 +106,8 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           await CampaignService.deleteCampaign(campaignId);
           set((state) => ({
-            campaigns: state.campaigns.filter(c => c.id !== campaignId),
+            // Ensure state.campaigns is always an array
+            campaigns: (state.campaigns || []).filter(c => c.id !== campaignId),
             currentCampaign: state.currentCampaign?.id === campaignId ? null : state.currentCampaign,
             isLoading: false,
           }));
@@ -118,7 +122,8 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           const result = await CampaignService.sendCampaign(campaignId);
           set((state) => ({
-            campaigns: state.campaigns.map(c => c.id === campaignId ? { ...c, status: 'SENDING' } : c),
+            // Ensure state.campaigns is always an array
+            campaigns: (state.campaigns || []).map(c => c.id === campaignId ? { ...c, status: 'SENDING' } : c),
             currentCampaign: state.currentCampaign?.id === campaignId ? { ...state.currentCampaign, status: 'SENDING' } : state.currentCampaign,
             isLoading: false,
           }));
@@ -189,6 +194,19 @@ export const useCampaignStore = create<CampaignState>()(
         campaigns: state.campaigns,
         currentCampaign: state.currentCampaign,
       }),
+      // Add a merge function to ensure campaigns is always an array
+      merge: (persistedState:any, currentState) => {
+        // Ensure campaigns is always an array
+        const campaigns = Array.isArray(persistedState?.campaigns as any) 
+          ? persistedState.campaigns as any
+          : currentState.campaigns;
+        
+        return {
+          ...currentState,
+          ...persistedState as any,
+          campaigns,
+        };
+      },
     }
   )
 );

@@ -1,9 +1,13 @@
+import { ProtectedRoute } from '@/components/auth/protected-route'
+import { Analytics } from '@/components/dashboard/analytics'
 import React from 'react'
 
-function Analytics() {
+function AnalyticsPage() {
   return (
-    <div>Analytics</div>
+    <ProtectedRoute>
+      <Analytics />
+    </ProtectedRoute>
   )
 }
 
-export default Analytics
+export default AnalyticsPage

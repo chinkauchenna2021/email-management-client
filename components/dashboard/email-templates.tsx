@@ -53,6 +53,7 @@ const categories = [
   { id: "seasonal", name: "Seasonal", icon: Gift, count: 2 },
 ]
 
+
 const mockTemplates: EmailTemplate[] = [
   {
     id: "1",
