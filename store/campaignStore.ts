@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CampaignService } from '@/services/campaignService';
 
-interface Campaign {
+export interface Campaign {
   id: string;
   name: string;
   subject: string;

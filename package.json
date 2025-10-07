@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@heroui/react": "^2.8.5",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -70,14 +71,15 @@
     "cmdk": "1.0.4",
     "date-fns": "latest",
     "embla-carousel-react": "8.5.1",
+    "framer-motion": "12.23.22",
     "geist": "latest",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "14.2.16",
     "next-themes": "^0.4.6",
-    "react": "^18",
+    "react": "^19.2.0",
     "react-day-picker": "9.8.0",
-    "react-dom": "^18",
+    "react-dom": "^19.2.0",
     "react-hook-form": "^7.60.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
@@ -86,8 +88,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
     "zod": "3.25.67",
-    "zustand": "^5.0.8",
-    "framer-motion": "12.23.22"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",

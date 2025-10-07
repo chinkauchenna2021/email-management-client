@@ -288,7 +288,7 @@ const filteredCampaigns = (() => {
   // Multiple safety checks
   if (!campaigns) return [];
   if (!Array.isArray(campaigns)) {
-    console.error('campaigns is not an array:', campaigns);
+    console.error('campaigns is not an array:', (campaigns as any).campaigns);
     return [];
   }
   
