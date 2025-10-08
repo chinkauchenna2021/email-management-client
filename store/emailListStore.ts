@@ -9,10 +9,17 @@ export interface EmailList {
   name: string;
   description?: string;
   totalEmails: number;
+  emailCount?:number;
   validEmails: number;
   invalidEmails: number;
   createdAt: string;
   updatedAt: string;
+  stats?:{
+    invalidEmails:number;
+    validEmails:number;
+    validityRate:number;
+
+  }
 }
 
 interface Email {
@@ -37,7 +44,7 @@ interface EmailListState {
   deleteEmailList: (listId: string) => Promise<void>;
   getEmailListWithStats: (listId: string) => Promise<void>;
   getAllEmailListsWithStats: () => Promise<void>;
-  addEmailsToList: (listId: string, emails: string[]) => Promise<void>;
+  addEmailsToList: (listId: string, emails: string[]) => Promise<void | any>;
   getEmailsInList: (listId: string, page?: number, limit?: number) => Promise<void>;
   validateEmailBatch: (emails: string[]) => Promise<any>;
   setCurrentList: (list: EmailList | null) => void;

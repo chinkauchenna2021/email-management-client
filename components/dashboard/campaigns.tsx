@@ -41,6 +41,8 @@ import { useEmailListStore } from "@/store/emailListStore"
 import { useTemplateStore } from "@/store/templateStore"
 import { useCampaignStore } from "@/store/campaignStore"
 import { useToast } from "@/hooks/use-toast"
+import { ScrollArea } from "../ui/scroll-area"
+// import { ScrollArea } from "@radix-ui/react-scroll-area"
 
 export function Campaigns() {
   const { toast } = useToast()
@@ -434,151 +436,157 @@ const filteredCampaigns = (() => {
           loadingText={selectedCampaign ? "Updating campaign..." : "Creating campaign..."}
           scrollable={true}
         >
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="schedule">Schedule</TabsTrigger>
-            </TabsList>
+          <div className="flex flex-col h-full">
+            <Tabs defaultValue="details" className="flex-1 flex flex-col">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="content">Content</TabsTrigger>
+                <TabsTrigger value="schedule">Schedule</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="details" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="campaignName">Campaign Name</Label>
-                  <Input
-                    id="campaignName"
-                    placeholder="Summer Sale 2024"
-                    value={newCampaign.name}
-                    onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="domain">Sending Domain</Label>
-                  <Select
-                    value={newCampaign.domainId}
-                    onValueChange={(value) => setNewCampaign({ ...newCampaign, domainId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select domain" />
-                    </SelectTrigger>
-                  <SelectContent>
-                    {safeDomains.map((domain) => (
-                      <SelectItem key={domain.id} value={domain.id}>
-                        {domain.domain}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="emailList">Email List</Label>
-                <Select
-                  value={newCampaign.listId}
-                  onValueChange={(value) => setNewCampaign({ ...newCampaign, listId: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select email list" />
-                  </SelectTrigger>
-                    <SelectContent>
-                      {safeEmailLists.map((list) => (
-                        <SelectItem key={list.id} value={list.id}>
-                          {list.name} ({list.totalEmails || 0} subscribers)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject Line</Label>
-                <Input
-                  id="subject"
-                  placeholder="🌞 Summer Sale: Up to 50% Off Everything!"
-                  value={newCampaign.subject}
-                  onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="content" className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="content">Email Content</Label>
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => setIsTemplateDialogOpen(true)}>
-                      <Settings className="w-4 h-4 mr-2" />
-                      Use Template
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview
-                    </Button>
-                  </div>
-                </div>
-                <RichTextEditor
-                  content={newCampaign.content}
-                  onChange={(content) => setNewCampaign({ ...newCampaign, content })}
-                  placeholder="Write your email content here... Use the toolbar above to format your text, add links, images, and more."
-                  className="min-h-[300px]"
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="schedule" className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 bg-transparent"
-                    onClick={() => {
-                      setNewCampaign({ ...newCampaign, scheduledDate: undefined });
-                      handleCreateCampaign();
-                    }}
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Send Now
-                  </Button>
-                  <Button variant="outline" className="flex-1 bg-transparent">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    Schedule Later
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <Label>Schedule Date & Time</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !newCampaign.scheduledDate && "text-muted-foreground",
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newCampaign.scheduledDate ? format(newCampaign.scheduledDate, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={newCampaign.scheduledDate}
-                        onSelect={(date) => setNewCampaign({ ...newCampaign, scheduledDate: date })}
-                        initialFocus
+              {/* Scrollable content area */}
+              <div className="flex-1 overflow-y-auto mt-4 pr-2">
+                <TabsContent value="details" className="space-y-4 m-0">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="campaignName">Campaign Name</Label>
+                      <Input
+                        id="campaignName"
+                        placeholder="Summer Sale 2024"
+                        value={newCampaign.name}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
                       />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="domain">Sending Domain</Label>
+                      <Select
+                        value={newCampaign.domainId}
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, domainId: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select domain" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {safeDomains.map((domain) => (
+                            <SelectItem key={domain.id} value={domain.id}>
+                              {domain.domain}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="emailList">Email List</Label>
+                    <Select
+                      value={newCampaign.listId}
+                      onValueChange={(value) => setNewCampaign({ ...newCampaign, listId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select email list" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {safeEmailLists.map((list) => (
+                          <SelectItem key={list.id} value={list.id}>
+                            {list.name} ({list.totalEmails || 0} subscribers)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject Line</Label>
+                    <Input
+                      id="subject"
+                      placeholder="🌞 Summer Sale: Up to 50% Off Everything!"
+                      value={newCampaign.subject}
+                      onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
+                    />
+                  </div>
+                </TabsContent>
 
-          <div className="flex justify-end space-x-2 mt-6">
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              {selectedCampaign ? "Cancel" : "Save Draft"}
-            </Button>
-            <Button onClick={handleCreateCampaign} disabled={isLoading || !newCampaign.name || !newCampaign.subject || !newCampaign.domainId || !newCampaign.listId}>
-              {selectedCampaign ? "Update Campaign" : "Create Campaign"}
-            </Button>
+                <TabsContent value="content" className="space-y-4 m-0 pb-24  h-screen">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="content">Email Content</Label>
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => setIsTemplateDialogOpen(true)}>
+                          <Settings className="w-4 h-4 mr-2" />
+                          Use Template
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-2" />
+                          Preview
+                        </Button>
+                      </div>
+                    </div>
+                    <RichTextEditor
+                      content={newCampaign.content}
+                      onChange={(content) => setNewCampaign({ ...newCampaign, content })}
+                      placeholder="Write your email content here... Use the toolbar above to format your text, add links, images, and more."
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="schedule" className="space-y-4 m-0">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 bg-transparent"
+                        onClick={() => {
+                          setNewCampaign({ ...newCampaign, scheduledDate: undefined });
+                          handleCreateCampaign();
+                        }}
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Send Now
+                      </Button>
+                      <Button variant="outline" className="flex-1 bg-transparent">
+                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        Schedule Later
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Schedule Date & Time</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !newCampaign.scheduledDate && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {newCampaign.scheduledDate ? format(newCampaign.scheduledDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={newCampaign.scheduledDate}
+                            onSelect={(date) => setNewCampaign({ ...newCampaign, scheduledDate: date })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                </TabsContent>
+              </div>
+            </Tabs>
+
+            {/* Fixed footer */}
+            <div className="flex justify-end space-x-2 mt-6 pt-4 border-t">
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                {selectedCampaign ? "Cancel" : "Save Draft"}
+              </Button>
+              <Button onClick={handleCreateCampaign} disabled={isLoading || !newCampaign.name || !newCampaign.subject || !newCampaign.domainId || !newCampaign.listId}>
+                {selectedCampaign ? "Update Campaign" : "Create Campaign"}
+              </Button>
+            </div>
           </div>
         </EnhancedModal>
 

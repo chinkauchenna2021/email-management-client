@@ -20,7 +20,6 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
 import {
   Globe,
   Plus,
@@ -54,6 +53,32 @@ const smtpProviders = [
   { value: "sparkpost", label: "SparkPost", host: "smtp.sparkpostmail.com", port: 587 },
 ]
 
+// Safe domain access helper functions
+const getDomainProperty = (domain: any, property: string, defaultValue: any = '') => {
+  if (!domain || typeof domain !== 'object') return defaultValue;
+  return domain[property] ?? defaultValue;
+};
+
+const isDomainVerified = (domain: any): boolean => {
+  return Boolean(getDomainProperty(domain, 'verified', false));
+};
+
+const getDomainReputation = (domain: any): number => {
+  return Number(getDomainProperty(domain, 'reputation', 0));
+};
+
+const getSmtpProvider = (domain: any): string => {
+  return String(getDomainProperty(domain, 'smtpProvider', 'Not configured'));
+};
+
+const getDailyLimit = (domain: any): number => {
+  return Number(getDomainProperty(domain, 'dailyLimit', 0));
+};
+
+const isWarmupEnabled = (domain: any): boolean => {
+  return Boolean(getDomainProperty(domain, 'enableDomainWarmup', false));
+};
+
 export function Domains() {
   const { toast } = useToast()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -64,10 +89,6 @@ export function Domains() {
   const [showPassword, setShowPassword] = useState(false)
   const [isTestingConnection, setIsTestingConnection] = useState(false)
 
-
-
-  
-  
   const [smtpForm, setSmtpForm] = useState({
     provider: "custom",
     host: "",
@@ -97,7 +118,7 @@ export function Domains() {
 
   useEffect(() => {
     fetchDomains();
-  }, []);
+  }, [fetchDomains]);
 
   useEffect(() => {
     if (error) {
@@ -231,32 +252,35 @@ export function Domains() {
   const handleConfigureDomain = (domain: any) => {
     setSelectedDomain(domain);
     setSmtpForm({
-      provider: domain.smtpProvider || "custom",
-      host: domain.smtpHost || "",
-      port: domain.smtpPort || 587,
-      security: domain.smtpSecurity || "STARTTLS",
-      username: domain.smtpUsername || "",
-      password: domain.smtpPassword || "",
-      dailyLimit: domain.dailyLimit || 1000,
-      enableWarmup: domain.enableDomainWarmup || false,
+      provider: getDomainProperty(domain, 'smtpProvider', 'custom'),
+      host: getDomainProperty(domain, 'smtpHost', ''),
+      port: Number(getDomainProperty(domain, 'smtpPort', 587)),
+      security: getDomainProperty(domain, 'smtpSecurity', 'STARTTLS'),
+      username: getDomainProperty(domain, 'smtpUsername', ''),
+      password: getDomainProperty(domain, 'smtpPassword', ''),
+      dailyLimit: Number(getDomainProperty(domain, 'dailyLimit', 1000)),
+      enableWarmup: Boolean(getDomainProperty(domain, 'enableDomainWarmup', false)),
     });
     setIsConfigDialogOpen(true);
   };
 
-  const getStatusIcon = (verified: boolean) => {
+  const getStatusIcon = (domain: any) => {
+    const verified = isDomainVerified(domain);
     return verified 
       ? <CheckCircle className="w-4 h-4 text-green-500" />
       : <XCircle className="w-4 h-4 text-red-500" />;
   };
 
-  const getStatusBadge = (verified: boolean) => {
+  const getStatusBadge = (domain: any) => {
+    const verified = isDomainVerified(domain);
     return verified 
       ? <Badge className="bg-green-500/10 text-green-500">Verified</Badge>
       : <Badge className="bg-yellow-500/10 text-yellow-500">Pending</Badge>;
   };
 
-  const getWarmupBadge = (enableDomainWarmup: boolean) => {
-    return enableDomainWarmup 
+  const getWarmupBadge = (domain: any) => {
+    const warmupEnabled = isWarmupEnabled(domain);
+    return warmupEnabled 
       ? <Badge className="bg-blue-500/10 text-blue-500">Enabled</Badge>
       : <Badge variant="outline">Disabled</Badge>;
   };
@@ -281,27 +305,23 @@ export function Domains() {
     }
   };
 
-  // Calculate stats for the cards
-const domainsArray = Array.isArray(domains) ? domains : [];
-const totalDomains = domainsArray.length;
-const verifiedDomains = domainsArray.filter((d) => d.verified).length;
-const totalEmailsToday = domainsArray.reduce((sum, d) => sum + (d.dailyLimit || 0), 0);
-const avgReputation = domainsArray.length > 0 
-  ? Math.round(domainsArray.reduce((sum, d) => sum + (d.reputation || 0), 0) / domainsArray.length)
-  : 0;
+  // Safe domain array handling
+  const domainsArray = Array.isArray(domains) ? domains : [];
+  const totalDomains = domainsArray.length;
+  const verifiedDomains = domainsArray.filter((d) => isDomainVerified(d)).length;
+  const totalEmailsToday = domainsArray.reduce((sum, d) => sum + getDailyLimit(d), 0);
+  const avgReputation = domainsArray.length > 0 
+    ? Math.round(domainsArray.reduce((sum, d) => sum + getDomainReputation(d), 0) / domainsArray.length)
+    : 0;
 
-
-
-
-
-  if (isLoading) {
-  return (
-    <div className="flex items-center justify-center p-8">
-      <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-      Loading domains...
-    </div>
-  );
-}
+  if (isLoading && domainsArray.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+        Loading domains...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -399,109 +419,122 @@ const avgReputation = domainsArray.length > 0
           <CardDescription>Manage your email sending domains, SMTP configuration, and delivery metrics</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Domain</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>SMTP Provider</TableHead>
-                <TableHead>Daily Limit</TableHead>
-                <TableHead>Warmup</TableHead>
-                <TableHead>Reputation</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {domainsArray.map((domain) => (
-                <TableRow key={domain.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <span className="font-medium">{domain.domain}</span>
-                        <div className="flex items-center space-x-1 mt-1">
-                          {getStatusIcon(domain.verified)}
+          {domainsArray.length === 0 ? (
+            <div className="text-center py-8">
+              <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No domains configured</h3>
+              <p className="text-muted-foreground mb-4">Get started by adding your first domain</p>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Domain
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Domain</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>SMTP Provider</TableHead>
+                  <TableHead>Daily Limit</TableHead>
+                  <TableHead>Warmup</TableHead>
+                  <TableHead>Reputation</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {domainsArray.map((domain) => (
+                  <TableRow key={getDomainProperty(domain, 'id', 'unknown')}>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <span className="font-medium">{getDomainProperty(domain, 'domain', 'Unknown Domain')}</span>
+                          <div className="flex items-center space-x-1 mt-1">
+                            {getStatusIcon(domain)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(domain.verified)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Server className="w-4 h-4 text-muted-foreground" />
-                      <span className="capitalize">{domain.smtpProvider || "Not configured"}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm">
-                        <span className="font-medium">{domain.dailyLimit?.toLocaleString() || 0}</span>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(domain)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Server className="w-4 h-4 text-muted-foreground" />
+                        <span className="capitalize">{getSmtpProvider(domain)}</span>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getWarmupBadge(domain.enableDomainWarmup)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${
-                            domain.reputation >= 80
-                              ? "bg-green-500"
-                              : domain.reputation >= 60
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                          }`}
-                          style={{ width: `${domain.reputation}%` }}
-                        />
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="text-sm">
+                          <span className="font-medium">{getDailyLimit(domain).toLocaleString()}</span>
+                        </div>
                       </div>
-                      <span className="text-sm font-medium">{domain.reputation}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewAnalytics(domain)}
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleConfigureDomain(domain)}
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleVerifyDomain(domain)}
-                        disabled={domain.verified}
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-red-500 hover:text-red-600"
-                        onClick={() => handleDeleteDomain(domain)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                    <TableCell>
+                      {getWarmupBadge(domain)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${
+                              getDomainReputation(domain) >= 80
+                                ? "bg-green-500"
+                                : getDomainReputation(domain) >= 60
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                            }`}
+                            style={{ width: `${Math.min(getDomainReputation(domain), 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium">{getDomainReputation(domain)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewAnalytics(domain)}
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleConfigureDomain(domain)}
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVerifyDomain(domain)}
+                          disabled={isDomainVerified(domain)}
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-500 hover:text-red-600"
+                          onClick={() => handleDeleteDomain(domain)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
+      {/* Rest of your dialogs remain the same */}
       <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -682,6 +715,8 @@ const avgReputation = domainsArray.length > 0
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Analytics Dialog and DNS Configuration sections remain the same */}
 
       <Dialog open={isAnalyticsDialogOpen} onOpenChange={setIsAnalyticsDialogOpen}>
         <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-auto">

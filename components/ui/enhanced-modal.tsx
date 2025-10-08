@@ -118,7 +118,7 @@ export function EnhancedModal({
         className={cn(
           sizeClasses[size], 
           animationClasses[animation], 
-          "flex flex-col p-0 overflow-hidden ",
+          "flex flex-col p-0  ",
           className
         )}
         style={{ maxHeight }}

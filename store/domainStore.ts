@@ -42,10 +42,54 @@ interface DomainState {
   clearError: () => void;
 }
 
+// Helper function to ensure domain data is properly formatted
+const normalizeDomain = (domain: any): Domain => {
+  if (!domain) {
+    throw new Error('Domain data is null or undefined');
+  }
+
+  return {
+    id: String(domain.id || ''),
+    domain: String(domain.domain || ''),
+    verified: Boolean(domain.verified),
+    dkimKey: domain.dkimKey ? String(domain.dkimKey) : undefined,
+    spfRecord: domain.spfRecord ? String(domain.spfRecord) : undefined,
+    dmarcRecord: domain.dmarcRecord ? String(domain.dmarcRecord) : undefined,
+    reputation: Number(domain.reputation || 0),
+    smtpProvider: domain.smtpProvider ? String(domain.smtpProvider) : undefined,
+    smtpHost: domain.smtpHost ? String(domain.smtpHost) : undefined,
+    smtpPort: domain.smtpPort ? Number(domain.smtpPort) : undefined,
+    smtpSecurity: domain.smtpSecurity ? String(domain.smtpSecurity) : undefined,
+    smtpUsername: domain.smtpUsername ? String(domain.smtpUsername) : undefined,
+    smtpPassword: domain.smtpPassword ? String(domain.smtpPassword) : undefined,
+    dailyLimit: domain.dailyLimit ? Number(domain.dailyLimit) : undefined,
+    enableDomainWarmup: Boolean(domain.enableDomainWarmup),
+    testEmail: domain.testEmail ? String(domain.testEmail) : undefined,
+    textMessage: domain.textMessage ? String(domain.textMessage) : undefined,
+    createdAt: String(domain.createdAt || ''),
+    updatedAt: String(domain.updatedAt || ''),
+  };
+};
+
+const normalizeDomains = (domains: any[]): Domain[] => {
+  if (!Array.isArray(domains)) {
+    return [];
+  }
+  
+  return domains.map(domain => {
+    try {
+      return normalizeDomain(domain);
+    } catch (error) {
+      console.error('Error normalizing domain:', error);
+      return null;
+    }
+  }).filter(Boolean) as Domain[];
+};
+
 export const useDomainStore = create<DomainState>()(
   persist(
     (set, get) => ({
-      domains: [], // This should already be an array
+      domains: [],
       currentDomain: null,
       isLoading: false,
       error: null,
@@ -53,11 +97,28 @@ export const useDomainStore = create<DomainState>()(
       fetchDomains: async () => {
         set({ isLoading: true, error: null });
         try {
-          const domains = await DomainService.getUserDomains();
-          // Double ensure it's an array
-          set({ domains: Array.isArray(domains) ? domains : [], isLoading: false });
+          const response = await DomainService.getUserDomains();
+          
+          // Handle different response structures
+          let domainsArray: any[] = [];
+          
+          if (Array.isArray(response)) {
+            domainsArray = response;
+          } else if (response && Array.isArray(response.domains)) {
+            domainsArray = response.domains;
+          } else if (response && response.data && Array.isArray(response.data)) {
+            domainsArray = response.data;
+          }
+          
+          const normalizedDomains = normalizeDomains(domainsArray);
+          set({ domains: normalizedDomains, isLoading: false });
         } catch (error: any) {
-          set({ error: error.message, isLoading: false, domains: [] });
+          console.error('Error fetching domains:', error);
+          set({ 
+            error: error.message || 'Failed to fetch domains', 
+            isLoading: false, 
+            domains: [] 
+          });
         }
       },
 
@@ -65,12 +126,23 @@ export const useDomainStore = create<DomainState>()(
         set({ isLoading: true, error: null });
         try {
           const result = await DomainService.addDomain(domain, smtpSettings);
-          set((state) => ({
-            // Ensure state.domains is always an array
-            domains: [...(state.domains || []), result.domain],
+          
+          // Extract domain from response
+          let newDomainData = result;
+          if (result && result.domain) {
+            newDomainData = result.domain;
+          } else if (result && result.data) {
+            newDomainData = result.data;
+          }
+          
+          const normalizedDomain = normalizeDomain(newDomainData);
+          
+          set((state: { domains: any; }) => ({
+            domains: [...state.domains, normalizedDomain],
             isLoading: false,
           }));
-          return result;
+          
+          return normalizedDomain;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
@@ -80,13 +152,24 @@ export const useDomainStore = create<DomainState>()(
       updateDomain: async (domainId: string, updates: Partial<Domain>) => {
         set({ isLoading: true, error: null });
         try {
-          const updatedDomain = await DomainService.updateDomainSettings(domainId, updates);
-          set((state) => ({
-            // Ensure state.domains is always an array
-            domains: (state.domains || []).map(d => d.id === domainId ? updatedDomain : d),
-            currentDomain: state.currentDomain?.id === domainId ? updatedDomain : state.currentDomain,
+          const result = await DomainService.updateDomainSettings(domainId, updates);
+          
+          let updatedDomainData = result;
+          if (result && result.domain) {
+            updatedDomainData = result.domain;
+          } else if (result && result.data) {
+            updatedDomainData = result.data;
+          }
+          
+          const normalizedDomain = normalizeDomain(updatedDomainData);
+          
+          set((state: { domains: any[]; currentDomain: { id: string; }; }) => ({
+            domains: state.domains.map(d => d.id === domainId ? normalizedDomain : d),
+            currentDomain: state.currentDomain?.id === domainId ? normalizedDomain : state.currentDomain,
             isLoading: false,
           }));
+          
+          return normalizedDomain;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
@@ -97,9 +180,8 @@ export const useDomainStore = create<DomainState>()(
         set({ isLoading: true, error: null });
         try {
           await DomainService.deleteDomain(domainId);
-          set((state) => ({
-            // Ensure state.domains is always an array
-            domains: (state.domains || []).filter(d => d.id !== domainId),
+          set((state: { domains: any[]; currentDomain: { id: string; }; }) => ({
+            domains: state.domains.filter(d => d.id !== domainId),
             currentDomain: state.currentDomain?.id === domainId ? null : state.currentDomain,
             isLoading: false,
           }));
@@ -113,13 +195,23 @@ export const useDomainStore = create<DomainState>()(
         set({ isLoading: true, error: null });
         try {
           const result = await DomainService.verifyDomain(domainId);
-          set((state) => ({
-            // Ensure state.domains is always an array
-            domains: (state.domains || []).map(d => d.id === domainId ? result.domain : d),
-            currentDomain: state.currentDomain?.id === domainId ? result.domain : state.currentDomain,
+          
+          let verifiedDomainData = result;
+          if (result && result.domain) {
+            verifiedDomainData = result.domain;
+          } else if (result && result.data) {
+            verifiedDomainData = result.data;
+          }
+          
+          const normalizedDomain = normalizeDomain(verifiedDomainData);
+          
+          set((state: { domains: any[]; currentDomain: { id: string; }; }) => ({
+            domains: state.domains.map(d => d.id === domainId ? normalizedDomain : d),
+            currentDomain: state.currentDomain?.id === domainId ? normalizedDomain : state.currentDomain,
             isLoading: false,
           }));
-          return result;
+          
+          return normalizedDomain;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
@@ -156,22 +248,25 @@ export const useDomainStore = create<DomainState>()(
 
       clearError: () => set({ error: null }),
     }),
- {
+    {
       name: 'domain-storage',
       partialize: (state) => ({
         domains: state.domains,
         currentDomain: state.currentDomain,
       }),
-      merge: (persistedState: any, currentState) => {
-        // Ensure domains is always an array during merge
-        const domains = Array.isArray(persistedState?.domains) 
-          ? persistedState.domains 
+      merge: (persistedState: any, currentState: any) => {
+        const persistedDomains = Array.isArray(persistedState?.domains) 
+          ? normalizeDomains(persistedState.domains)
           : [];
-        
+          
+        const persistedCurrentDomain = persistedState?.currentDomain 
+          ? normalizeDomain(persistedState.currentDomain)
+          : null;
+
         return {
           ...currentState,
-          ...persistedState,
-          domains,
+          domains: persistedDomains,
+          currentDomain: persistedCurrentDomain,
         };
       },
     }

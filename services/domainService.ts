@@ -33,7 +33,8 @@ export const DomainService = {
   },
 
   async getDomainStats(domainId: string) {
-    const response = await api.get(`/domains/${domainId}/stats`);
+    // const response = await api.get(`/domains/${domainId}/stats`);
+       const response = await api.get(`/domains/stats`);
     return response.data;
   },
 
