@@ -12,6 +12,13 @@ import Settings from "@/components/dashboard/settings"
 import Automation from "@/components/dashboard/automation"
 import { EmailComposer } from "@/components/dashboard/email-composer"
 import TemplatesPage from "./templates/page"
+import DashboardPage from "./overview/page"
+import DomainPage from "./domain/page"
+import EmailListPage from "./email-list/page"
+import CampaignPage from "./campaign/page"
+import AnalyticsPage from "./analytics/page"
+import AutomationPage from "./automation/page"
+import SettingsPage from "./settings/page"
 
 interface Campaign {
   id: string
@@ -60,9 +67,9 @@ export default function Home() {
   const renderContent = () => {
     switch (activeSection) {
       case "overview":
-        return <Overview />
+        return <DashboardPage />
       case "domains":
-        return <Domains />
+        return <DomainPage />
       case "email-composer":
         return (
            <div className="min-h-screen bg-background dark">
@@ -76,19 +83,19 @@ export default function Home() {
           </div>
         );
       case "lists":
-        return <EmailLists />
+        return <EmailListPage />
       case "campaigns":
-        return <Campaigns />
+        return <CampaignPage />
       case "analytics":
-        return <Analytics />
+        return <AnalyticsPage />
       case "templates":
         return <TemplatesPage />
       case "automation":
-        return <Automation />
+        return <AutomationPage />
       case "settings":
-        return <Settings />
+        return <SettingsPage />
       default:
-        return <Overview />
+        return <DashboardPage />
     }
   }
 
