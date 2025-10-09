@@ -1,43 +1,22 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/ui/data-table";
-import { EnhancedModal } from "@/components/ui/enhanced-modal";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { EmailTemplateSelector } from "@/components/ui/email-template-selector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { DataTable } from "@/components/ui/data-table"
+import { EnhancedModal } from "@/components/ui/enhanced-modal"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
+import { EmailTemplateSelector } from "@/components/ui/email-template-selector"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Progress } from "@/components/ui/progress"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
 import {
   Send,
   Plus,
@@ -55,23 +34,23 @@ import {
   Pause,
   Play,
   Settings,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useDomainStore } from "@/store/domainStore";
-import { useEmailListStore } from "@/store/emailListStore";
-import { useTemplateStore } from "@/store/templateStore";
-import { useCampaignStore } from "@/store/campaignStore";
-import { useToast } from "@/hooks/use-toast";
-import { ScrollArea } from "../ui/scroll-area";
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useDomainStore } from "@/store/domainStore"
+import { useEmailListStore } from "@/store/emailListStore"
+import { useTemplateStore } from "@/store/templateStore"
+import { useCampaignStore } from "@/store/campaignStore"
+import { useToast } from "@/hooks/use-toast"
+import { ScrollArea } from "../ui/scroll-area"
 // import { ScrollArea } from "@radix-ui/react-scroll-area"
 
 export function Campaigns() {
-  const { toast } = useToast();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
-
+  const { toast } = useToast()
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null)
+  
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     subject: "",
@@ -80,7 +59,7 @@ export function Campaigns() {
     listId: "",
     templateId: "",
     scheduledDate: undefined as Date | undefined,
-  });
+  })
 
   const {
     campaigns,
@@ -98,7 +77,7 @@ export function Campaigns() {
     getOverallCampaignStats,
     retryFailedEmails,
     setCurrentCampaign,
-    clearError,
+    clearError
   } = useCampaignStore();
 
   const { domains } = useDomainStore();
@@ -111,13 +90,13 @@ export function Campaigns() {
   }, []);
 
   // Safe domain access
-  const safeDomains = Array.isArray(domains) ? domains : [];
+const safeDomains = Array.isArray(domains) ? domains : [];
 
-  // Safe email lists access
-  const safeEmailLists = Array.isArray(emailLists) ? emailLists : [];
+// Safe email lists access  
+const safeEmailLists = Array.isArray(emailLists) ? emailLists : [];
 
-  // Safe templates access
-  const safeTemplates = Array.isArray(templates) ? templates : [];
+// Safe templates access
+const safeTemplates = Array.isArray(templates) ? templates : [];
 
   useEffect(() => {
     if (error) {
@@ -130,57 +109,51 @@ export function Campaigns() {
     }
   }, [error, toast, clearError]);
 
-  const handleCreateCampaign = async () => {
-    try {
-      const campaignData = {
-        name: newCampaign.name,
-        subject: newCampaign.subject,
-        content: newCampaign.content,
-        domainId: newCampaign.domainId,
-        listId: newCampaign.listId,
-        templateId: newCampaign.templateId || undefined,
-        status: "DRAFT" as const,
-        scheduledAt: newCampaign.scheduledDate
-          ? newCampaign.scheduledDate.toISOString()
-          : undefined,
-        saveAsDraft: !newCampaign.scheduledDate, // Save as draft if not scheduled
-      };
+const handleCreateCampaign = async () => {
+  try {
+    const campaignData = {
+      name: newCampaign.name,
+      subject: newCampaign.subject,
+      content: newCampaign.content,
+      domainId: newCampaign.domainId,
+      listId: newCampaign.listId,
+      templateId: newCampaign.templateId || undefined,
+      status: 'DRAFT' as const,
+      scheduledAt: newCampaign.scheduledDate ? newCampaign.scheduledDate.toISOString() : undefined,
+      saveAsDraft: !newCampaign.scheduledDate, // Save as draft if not scheduled
+    };
 
-      await createCampaign(campaignData);
+    await createCampaign(campaignData);
+    
+    setIsCreateDialogOpen(false);
+    setNewCampaign({
+      name: "",
+      subject: "",
+      content: "",
+      domainId: "",
+      listId: "",
+      templateId: "",
+      scheduledDate: undefined,
+    });
 
-      setIsCreateDialogOpen(false);
-      setNewCampaign({
-        name: "",
-        subject: "",
-        content: "",
-        domainId: "",
-        listId: "",
-        templateId: "",
-        scheduledDate: undefined,
-      });
+    toast({
+      title: newCampaign.scheduledDate ? "Campaign Scheduled" : "Campaign Created",
+      description: newCampaign.scheduledDate 
+        ? `Your campaign has been scheduled for ${format(newCampaign.scheduledDate, "PPP 'at' h:mm a")}`
+        : "Your campaign has been created successfully.",
+    });
+  } catch (error) {
+    // Error is handled by the useEffect above
+  }
+};
 
-      toast({
-        title: newCampaign.scheduledDate
-          ? "Campaign Scheduled"
-          : "Campaign Created",
-        description: newCampaign.scheduledDate
-          ? `Your campaign has been scheduled for ${format(
-              newCampaign.scheduledDate,
-              "PPP 'at' h:mm a"
-            )}`
-          : "Your campaign has been created successfully.",
-      });
-    } catch (error) {
-      // Error is handled by the useEffect above
-    }
-  };
 
   // Debugging logs to verify campaigns is always an array
   useEffect(() => {
-    console.log("Campaigns value:", campaigns);
-    console.log("Campaigns type:", typeof campaigns);
-    console.log("Is campaigns array?", Array.isArray(campaigns));
-  }, [campaigns]);
+  console.log('Campaigns value:', campaigns);
+  console.log('Campaigns type:', typeof campaigns);
+  console.log('Is campaigns array?', Array.isArray(campaigns));
+}, [campaigns]);
 
   const handleCampaignAction = async (action: string, campaign: any) => {
     try {
@@ -203,7 +176,7 @@ export function Campaigns() {
             domainId: campaign.domainId,
             listId: campaign.listId,
             templateId: campaign.templateId,
-            status: "DRAFT" as const,
+            status: 'DRAFT' as const,
           };
           await createCampaign(duplicateData);
           toast({
@@ -212,14 +185,14 @@ export function Campaigns() {
           });
           break;
         case "pause":
-          await updateCampaign(campaign.id, { status: "PAUSED" });
+          await updateCampaign(campaign.id, { status: 'PAUSED' });
           toast({
             title: "Campaign Paused",
             description: `${campaign.name} has been paused.`,
           });
           break;
         case "resume":
-          await updateCampaign(campaign.id, { status: "READY" });
+          await updateCampaign(campaign.id, { status: 'READY' });
           toast({
             title: "Campaign Resumed",
             description: `${campaign.name} has been resumed.`,
@@ -263,21 +236,15 @@ export function Campaigns() {
       case "SENDING":
         return <Badge className="bg-blue-500/10 text-blue-500">Sending</Badge>;
       case "SCHEDULED":
-        return (
-          <Badge className="bg-purple-500/10 text-purple-500">Scheduled</Badge>
-        );
+        return <Badge className="bg-purple-500/10 text-purple-500">Scheduled</Badge>;
       case "DRAFT":
         return <Badge variant="outline">Draft</Badge>;
       case "PAUSED":
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-500">Paused</Badge>
-        );
+        return <Badge className="bg-yellow-500/10 text-yellow-500">Paused</Badge>;
       case "FAILED":
         return <Badge className="bg-red-500/10 text-red-500">Failed</Badge>;
       case "READY":
-        return (
-          <Badge className="bg-indigo-500/10 text-indigo-500">Ready</Badge>
-        );
+        return <Badge className="bg-indigo-500/10 text-indigo-500">Ready</Badge>;
       default:
         return <Badge variant="secondary">Unknown</Badge>;
     }
@@ -312,37 +279,37 @@ export function Campaigns() {
     return delivered > 0 ? ((clicked / delivered) * 100).toFixed(1) : "0.0";
   };
 
-  const getDomainName = (domainId: string) => {
-    const domain = safeDomains.find((d) => d.id === domainId);
-    return domain ? domain.domain : domainId;
-  };
+const getDomainName = (domainId: string) => {
+  const domain = safeDomains.find(d => d.id === domainId);
+  return domain ? domain.domain : domainId;
+};
 
-  const getListName = (listId: string) => {
-    const list = safeEmailLists.find((l) => l.id === listId);
-    return list ? list.name : listId;
-  };
+const getListName = (listId: string) => {
+  const list = safeEmailLists.find(l => l.id === listId);
+  return list ? list.name : listId;
+};
 
-  const filteredCampaigns = (() => {
-    // Multiple safety checks
-    if (!campaigns) return [];
-    if (!Array.isArray(campaigns)) {
-      console.error("campaigns is not an array:", (campaigns as any).campaigns);
-      return [];
-    }
-
-    return campaigns.filter((campaign) => {
-      // Check if campaign exists and has required properties
-      if (!campaign) return false;
-
-      const name = campaign.name || "";
-      const subject = campaign.subject || "";
-
-      return (
-        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        subject.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    });
-  })();
+const filteredCampaigns = (() => {
+  // Multiple safety checks
+  if (!campaigns) return [];
+  if (!Array.isArray(campaigns)) {
+    console.error('campaigns is not an array:', (campaigns as any).campaigns);
+    return [];
+  }
+  
+  return campaigns.filter((campaign) => {
+    // Check if campaign exists and has required properties
+    if (!campaign) return false;
+    
+    const name = campaign.name || '';
+    const subject = campaign.subject || '';
+    
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subject.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+})();
 
   const campaignColumns = [
     {
@@ -356,9 +323,7 @@ export function Campaigns() {
               {getStatusIcon(campaign.status)}
               <span className="font-medium">{campaign.name}</span>
             </div>
-            <p className="text-sm text-muted-foreground truncate max-w-xs">
-              {campaign.subject}
-            </p>
+            <p className="text-sm text-muted-foreground truncate max-w-xs">{campaign.subject}</p>
             <div className="flex items-center space-x-2 text-xs text-muted-foreground">
               <span>{getDomainName(campaign.domainId)}</span>
               <span>•</span>
@@ -374,7 +339,9 @@ export function Campaigns() {
       cell: ({ row }: any) => {
         const campaign = row.original;
         return (
-          <div className="space-y-1">{getStatusBadge(campaign.status)}</div>
+          <div className="space-y-1">
+            {getStatusBadge(campaign.status)}
+          </div>
         );
       },
     },
@@ -403,46 +370,31 @@ export function Campaigns() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => handleCampaignAction("view", campaign)}
-              >
+              <DropdownMenuItem onClick={() => handleCampaignAction("view", campaign)}>
                 <Eye className="w-4 h-4 mr-2" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleCampaignAction("edit", campaign)}
-              >
+              <DropdownMenuItem onClick={() => handleCampaignAction("edit", campaign)}>
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Campaign
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleCampaignAction("duplicate", campaign)}
-              >
+              <DropdownMenuItem onClick={() => handleCampaignAction("duplicate", campaign)}>
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate
               </DropdownMenuItem>
               {campaign.status === "SENDING" && (
-                <DropdownMenuItem
-                  onClick={() => handleCampaignAction("pause", campaign)}
-                >
+                <DropdownMenuItem onClick={() => handleCampaignAction("pause", campaign)}>
                   <Pause className="w-4 h-4 mr-2" />
                   Pause
                 </DropdownMenuItem>
               )}
-              {(campaign.status === "PAUSED" ||
-                campaign.status === "DRAFT" ||
-                campaign.status === "READY") && (
-                <DropdownMenuItem
-                  onClick={() => handleCampaignAction("send", campaign)}
-                >
+              {(campaign.status === "PAUSED" || campaign.status === "DRAFT" || campaign.status === "READY") && (
+                <DropdownMenuItem onClick={() => handleCampaignAction("send", campaign)}>
                   <Send className="w-4 h-4 mr-2" />
                   Send Now
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
-                className="text-red-600"
-                onClick={() => handleCampaignAction("delete", campaign)}
-              >
+              <DropdownMenuItem className="text-red-600" onClick={() => handleCampaignAction("delete", campaign)}>
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
               </DropdownMenuItem>
@@ -458,12 +410,8 @@ export function Campaigns() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Email Campaigns
-          </h1>
-          <p className="text-muted-foreground">
-            Create, manage, and track your email campaigns
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Email Campaigns</h1>
+          <p className="text-muted-foreground">Create, manage, and track your email campaigns</p>
         </div>
 
         {/* Template Selector Modal */}
@@ -485,16 +433,10 @@ export function Campaigns() {
           isOpen={isCreateDialogOpen}
           onClose={() => setIsCreateDialogOpen(false)}
           title={selectedCampaign ? "Edit Campaign" : "Create New Campaign"}
-          description={
-            selectedCampaign
-              ? "Update your campaign details"
-              : "Set up a new email campaign to send to your subscribers"
-          }
+          description={selectedCampaign ? "Update your campaign details" : "Set up a new email campaign to send to your subscribers"}
           size="full"
           isLoading={isLoading}
-          loadingText={
-            selectedCampaign ? "Updating campaign..." : "Creating campaign..."
-          }
+          loadingText={selectedCampaign ? "Updating campaign..." : "Creating campaign..."}
           scrollable={true}
         >
           <div className="flex flex-col h-full">
@@ -515,21 +457,14 @@ export function Campaigns() {
                         id="campaignName"
                         placeholder="Summer Sale 2024"
                         value={newCampaign.name}
-                        onChange={(e) =>
-                          setNewCampaign({
-                            ...newCampaign,
-                            name: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="domain">Sending Domain</Label>
                       <Select
                         value={newCampaign.domainId}
-                        onValueChange={(value) =>
-                          setNewCampaign({ ...newCampaign, domainId: value })
-                        }
+                        onValueChange={(value) => setNewCampaign({ ...newCampaign, domainId: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select domain" />
@@ -548,9 +483,7 @@ export function Campaigns() {
                     <Label htmlFor="emailList">Email List</Label>
                     <Select
                       value={newCampaign.listId}
-                      onValueChange={(value) =>
-                        setNewCampaign({ ...newCampaign, listId: value })
-                      }
+                      onValueChange={(value) => setNewCampaign({ ...newCampaign, listId: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select email list" />
@@ -570,28 +503,17 @@ export function Campaigns() {
                       id="subject"
                       placeholder="🌞 Summer Sale: Up to 50% Off Everything!"
                       value={newCampaign.subject}
-                      onChange={(e) =>
-                        setNewCampaign({
-                          ...newCampaign,
-                          subject: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
                     />
                   </div>
                 </TabsContent>
-                <TabsContent
-                  value="content"
-                  className="space-y-4 m-0 pb-24  h-screen"
-                >
+
+                <TabsContent value="content" className="space-y-4 m-0 pb-24  h-screen">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="content">Email Content</Label>
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsTemplateDialogOpen(true)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setIsTemplateDialogOpen(true)}>
                           <Settings className="w-4 h-4 mr-2" />
                           Use Template
                         </Button>
@@ -603,162 +525,57 @@ export function Campaigns() {
                     </div>
                     <RichTextEditor
                       content={newCampaign.content}
-                      onChange={(content) =>
-                        setNewCampaign({ ...newCampaign, content })
-                      }
+                      onChange={(content) => setNewCampaign({ ...newCampaign, content })}
                       placeholder="Write your email content here... Use the toolbar above to format your text, add links, images, and more."
                       className="min-h-[100px]"
                     />
                   </div>
                 </TabsContent>
+
                 <TabsContent value="schedule" className="space-y-4 m-0">
                   <div className="space-y-4">
                     <div className="flex items-center space-x-4">
-                      <Button
-                        variant="outline"
+                      <Button 
+                        variant="outline" 
                         className="flex-1 bg-transparent"
                         onClick={() => {
-                          setNewCampaign({
-                            ...newCampaign,
-                            scheduledDate: undefined,
-                          });
-                          // Don't call handleCreateCampaign here, just set the state
+                          setNewCampaign({ ...newCampaign, scheduledDate: undefined });
+                          handleCreateCampaign();
                         }}
                       >
                         <Send className="w-4 h-4 mr-2" />
                         Send Now
                       </Button>
-                      <Button
-                        variant={
-                          newCampaign.scheduledDate ? "default" : "outline"
-                        }
-                        className="flex-1"
-                      >
+                      <Button variant="outline" className="flex-1 bg-transparent">
                         <CalendarIcon className="w-4 h-4 mr-2" />
                         Schedule Later
                       </Button>
                     </div>
-
-                    {newCampaign.scheduledDate && (
-                      <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <div className="space-y-2">
-                          <Label>Schedule Date</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !newCampaign.scheduledDate &&
-                                    "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {newCampaign.scheduledDate
-                                  ? format(newCampaign.scheduledDate, "PPP")
-                                  : "Pick a date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-auto p-0"
-                              align="start"
-                            >
-                              <Calendar
-                                mode="single"
-                                selected={newCampaign.scheduledDate}
-                                onSelect={(date) =>
-                                  setNewCampaign({
-                                    ...newCampaign,
-                                    scheduledDate: date,
-                                  })
-                                }
-                                initialFocus
-                                disabled={(date) => date < new Date()}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Schedule Time</Label>
-                          <div className="flex space-x-2">
-                            <Select
-                              value={
-                                newCampaign.scheduledDate
-                                  ? format(newCampaign.scheduledDate, "HH")
-                                  : "09"
-                              }
-                              onValueChange={(hour) => {
-                                const newDate = newCampaign.scheduledDate
-                                  ? new Date(newCampaign.scheduledDate)
-                                  : new Date();
-                                newDate.setHours(parseInt(hour));
-                                setNewCampaign({
-                                  ...newCampaign,
-                                  scheduledDate: newDate,
-                                });
-                              }}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 24 }, (_, i) => i).map(
-                                  (hour) => (
-                                    <SelectItem
-                                      key={hour}
-                                      value={hour.toString().padStart(2, "0")}
-                                    >
-                                      {hour.toString().padStart(2, "0")}
-                                    </SelectItem>
-                                  )
-                                )}
-                              </SelectContent>
-                            </Select>
-
-                            <Select
-                              value={
-                                newCampaign.scheduledDate
-                                  ? format(newCampaign.scheduledDate, "mm")
-                                  : "00"
-                              }
-                              onValueChange={(minute) => {
-                                const newDate = newCampaign.scheduledDate
-                                  ? new Date(newCampaign.scheduledDate)
-                                  : new Date();
-                                newDate.setMinutes(parseInt(minute));
-                                setNewCampaign({
-                                  ...newCampaign,
-                                  scheduledDate: newDate,
-                                });
-                              }}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="00">00</SelectItem>
-                                <SelectItem value="15">15</SelectItem>
-                                <SelectItem value="30">30</SelectItem>
-                                <SelectItem value="45">45</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                          <p className="text-sm text-blue-800">
-                            <strong>Scheduled for:</strong>{" "}
-                            {newCampaign.scheduledDate
-                              ? format(
-                                  newCampaign.scheduledDate,
-                                  "PPP 'at' h:mm a"
-                                )
-                              : "Not set"}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <Label>Schedule Date & Time</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !newCampaign.scheduledDate && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {newCampaign.scheduledDate ? format(newCampaign.scheduledDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={newCampaign.scheduledDate}
+                            onSelect={(date) => setNewCampaign({ ...newCampaign, scheduledDate: date })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
                 </TabsContent>
               </div>
@@ -766,32 +583,17 @@ export function Campaigns() {
 
             {/* Fixed footer */}
             <div className="flex justify-end space-x-2 mt-6 pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 {selectedCampaign ? "Cancel" : "Save Draft"}
               </Button>
-              <Button
-                onClick={handleCreateCampaign}
-                disabled={
-                  isLoading ||
-                  !newCampaign.name ||
-                  !newCampaign.subject ||
-                  !newCampaign.domainId ||
-                  !newCampaign.listId
-                }
-              >
+              <Button onClick={handleCreateCampaign} disabled={isLoading || !newCampaign.name || !newCampaign.subject || !newCampaign.domainId || !newCampaign.listId}>
                 {selectedCampaign ? "Update Campaign" : "Create Campaign"}
               </Button>
             </div>
           </div>
         </EnhancedModal>
 
-        <Button
-          className="bg-primary hover:bg-primary/90"
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Create Campaign
         </Button>
@@ -801,9 +603,7 @@ export function Campaigns() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Campaigns
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
             <Send className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -821,9 +621,7 @@ export function Campaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {campaignStats?.totalEmails
-                ? campaignStats.totalEmails.toLocaleString()
-                : "0"}
+              {campaignStats?.totalEmails ? campaignStats.totalEmails.toLocaleString() : "0"}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+8%</span> from last month
@@ -838,9 +636,7 @@ export function Campaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {campaignStats?.openRate
-                ? `${campaignStats.openRate.toFixed(1)}%`
-                : "0%"}
+              {campaignStats?.openRate ? `${campaignStats.openRate.toFixed(1)}%` : "0%"}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+2.1%</span> industry avg
@@ -850,16 +646,12 @@ export function Campaigns() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Avg Click Rate
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Avg Click Rate</CardTitle>
             <MousePointer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {campaignStats?.clickRate
-                ? `${campaignStats.clickRate.toFixed(1)}%`
-                : "0%"}
+              {campaignStats?.clickRate ? `${campaignStats.clickRate.toFixed(1)}%` : "0%"}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-red-500">-0.3%</span> from last month
@@ -885,28 +677,26 @@ export function Campaigns() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Campaigns</CardTitle>
-          <CardDescription>
-            Manage and track all your email campaigns
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <DataTable
-              columns={campaignColumns}
-              data={filteredCampaigns}
-              searchPlaceholder="Search campaigns..."
-              onRowAction={handleCampaignAction}
-            />
-          )}
-        </CardContent>
-      </Card>
+<Card>
+  <CardHeader>
+    <CardTitle>All Campaigns</CardTitle>
+    <CardDescription>Manage and track all your email campaigns</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {isLoading ? (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    ) : (
+      <DataTable
+        columns={campaignColumns}
+        data={filteredCampaigns}
+        searchPlaceholder="Search campaigns..."
+        onRowAction={handleCampaignAction}
+      />
+    )}
+  </CardContent>
+</Card>
     </div>
-  );
+  )
 }
