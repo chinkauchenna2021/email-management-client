@@ -4,10 +4,14 @@ import { persist } from 'zustand/middleware';
 import { TemplateService } from '@/services/templateService';
 
 interface EmailTemplate {
+  description: any;
+  tags: any;
+  rating: string;
+  usageCount: any;
   id: string;
   name: string;
   subject: string;
-  content: string;
+  htmlContent: string;
   category?: string;
   createdAt: string;
   updatedAt: string;
