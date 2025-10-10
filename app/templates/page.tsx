@@ -17,7 +17,9 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen bg-background dark">
+      <ProtectedRoute>
       <EmailTemplates onSelectTemplate={handleSelectTemplate} />
+      </ProtectedRoute>
     </div>
   )
 }
