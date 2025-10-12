@@ -1,33 +1,6 @@
-// store/campaignStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CampaignService } from '@/services/campaignService';
-
-export interface Campaign {
-  id: string;
-  name: string;
-  subject: string;
-  content: string;
-  status: 'DRAFT' | 'READY' | 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED' | 'PAUSED';
-  scheduledAt?: string;
-  sentAt?: string;
-  domainId: string;
-  listId: string;
-  templateId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CampaignStats {
-  totalEmails: number;
-  delivered: number;
-  opened: number;
-  clicked: number;
-  bounced: number;
-  complained: number;
-  openRate: number;
-  clickRate: number;
-}
+import { CampaignService, type Campaign, type CampaignStats, type CreateCampaignData } from '@/services/campaignService';
 
 interface CampaignState {
   campaigns: Campaign[];
@@ -37,13 +10,13 @@ interface CampaignState {
   error: string | null;
   
   fetchCampaigns: () => Promise<void>;
-  createCampaign: (campaign: Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  createCampaign: (campaignData: CreateCampaignData) => Promise<Campaign>;
   updateCampaign: (campaignId: string, updates: Partial<Campaign>) => Promise<void>;
   deleteCampaign: (campaignId: string) => Promise<void>;
   sendCampaign: (campaignId: string) => Promise<void>;
-  getCampaignDetails: (campaignId: string) => Promise<void>;
-  getCampaignStats: (campaignId: string) => Promise<void>;
-  getOverallCampaignStats: () => Promise<void>;
+  getCampaignDetails: (campaignId: string) => Promise<Campaign>;
+  getCampaignStats: (campaignId: string) => Promise<CampaignStats>;
+  getOverallCampaignStats: () => Promise<CampaignStats>;
   retryFailedEmails: (campaignId: string) => Promise<void>;
   setCurrentCampaign: (campaign: Campaign | null) => void;
   clearError: () => void;
@@ -52,7 +25,7 @@ interface CampaignState {
 export const useCampaignStore = create<CampaignState>()(
   persist(
     (set, get) => ({
-      campaigns: [], // Ensure this is always an array
+      campaigns: [],
       currentCampaign: null,
       campaignStats: null,
       isLoading: false,
@@ -62,41 +35,47 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isLoading: true, error: null });
         try {
           const campaigns = await CampaignService.getUserCampaigns();
-          // Ensure campaigns is always an array
-          set({ campaigns: campaigns || [], isLoading: false });
+          set({ campaigns, isLoading: false });
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
         }
       },
 
-      createCampaign: async (campaignData) => {
+      createCampaign: async (campaignData: CreateCampaignData) => {
         set({ isLoading: true, error: null });
         try {
           const campaign = await CampaignService.createCampaign(campaignData);
           set((state) => ({
-            // Ensure state.campaigns is always an array
-            campaigns: [campaign, ...(state.campaigns || [])],
+            campaigns: [campaign, ...state.campaigns],
             isLoading: false,
           }));
           return campaign;
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
 
-      updateCampaign: async (campaignId: string, updates) => {
+      updateCampaign: async (campaignId: string, updates: Partial<Campaign>) => {
         set({ isLoading: true, error: null });
         try {
           const updatedCampaign = await CampaignService.updateCampaign(campaignId, updates);
           set((state) => ({
-            // Ensure state.campaigns is always an array
-            campaigns: (state.campaigns || []).map(c => c.id === campaignId ? updatedCampaign : c),
+            campaigns: state.campaigns.map(c => c.id === campaignId ? updatedCampaign : c),
             currentCampaign: state.currentCampaign?.id === campaignId ? updatedCampaign : state.currentCampaign,
             isLoading: false,
           }));
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
@@ -106,13 +85,15 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           await CampaignService.deleteCampaign(campaignId);
           set((state) => ({
-            // Ensure state.campaigns is always an array
-            campaigns: (state.campaigns || []).filter(c => c.id !== campaignId),
+            campaigns: state.campaigns.filter(c => c.id !== campaignId),
             currentCampaign: state.currentCampaign?.id === campaignId ? null : state.currentCampaign,
             isLoading: false,
           }));
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
@@ -122,14 +103,16 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           const result = await CampaignService.sendCampaign(campaignId);
           set((state) => ({
-            // Ensure state.campaigns is always an array
-            campaigns: (state.campaigns || []).map(c => c.id === campaignId ? { ...c, status: 'SENDING' } : c),
+            campaigns: state.campaigns.map(c => c.id === campaignId ? { ...c, status: 'SENDING' } : c),
             currentCampaign: state.currentCampaign?.id === campaignId ? { ...state.currentCampaign, status: 'SENDING' } : state.currentCampaign,
             isLoading: false,
           }));
           return result;
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
@@ -141,7 +124,10 @@ export const useCampaignStore = create<CampaignState>()(
           set({ currentCampaign: campaign, isLoading: false });
           return campaign;
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
@@ -153,7 +139,10 @@ export const useCampaignStore = create<CampaignState>()(
           set({ campaignStats: stats, isLoading: false });
           return stats;
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
@@ -165,7 +154,10 @@ export const useCampaignStore = create<CampaignState>()(
           set({ campaignStats: stats, isLoading: false });
           return stats;
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
@@ -177,7 +169,10 @@ export const useCampaignStore = create<CampaignState>()(
           set({ isLoading: false });
           return result;
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ 
+            error: error.response?.data?.message || error.message, 
+            isLoading: false 
+          });
           throw error;
         }
       },
@@ -194,19 +189,6 @@ export const useCampaignStore = create<CampaignState>()(
         campaigns: state.campaigns,
         currentCampaign: state.currentCampaign,
       }),
-      // Add a merge function to ensure campaigns is always an array
-      merge: (persistedState:any, currentState) => {
-        // Ensure campaigns is always an array
-        const campaigns = Array.isArray(persistedState?.campaigns as any) 
-          ? persistedState.campaigns as any
-          : currentState.campaigns;
-        
-        return {
-          ...currentState,
-          ...persistedState as any,
-          campaigns,
-        };
-      },
     }
   )
 );

@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 import { EmailListService } from '@/services/emailListService';
 
 export interface EmailList {
+  emails: any;
   subscriberCount: number;
   id: string;
   name: string;
