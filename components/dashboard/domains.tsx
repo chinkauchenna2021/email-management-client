@@ -65,34 +65,29 @@ import {
 import { useDomainStore } from "@/store/domainStore";
 import { useToast } from "@/hooks/use-toast";
 
-const smtpProviders = [
-  { value: "custom", label: "Custom SMTP", host: "", port: 587 },
-  {
-    value: "sendgrid",
-    label: "SendGrid",
-    host: "smtp.sendgrid.net",
+export const smtpProviders = [
+  { 
+    value: "custom", 
+    label: "Custom SMTP", 
+    host: "", 
     port: 587,
+    description: "Use your own SMTP server configuration"
   },
-  { value: "mailgun", label: "Mailgun", host: "smtp.mailgun.org", port: 587 },
-  {
-    value: "ses",
-    label: "Amazon SES",
-    host: "email-smtp.us-east-1.amazonaws.com",
+  { 
+    value: "resend", 
+    label: "Resend", 
+    host: "smtp.resend.com", 
     port: 587,
+    description: "Modern email API for developers"
   },
-  {
-    value: "postmark",
-    label: "Postmark",
-    host: "smtp.postmarkapp.com",
+  { 
+    value: "mailtrap", 
+    label: "Mailtrap", 
+    host: "smtp.mailtrap.io", 
     port: 587,
-  },
-  {
-    value: "sparkpost",
-    label: "SparkPost",
-    host: "smtp.sparkpostmail.com",
-    port: 587,
-  },
-];
+    description: "Email testing and development"
+  }
+] as const;
 
 // Safe domain access helper functions
 const getDomainProperty = (

@@ -272,6 +272,9 @@ const handleCreateCampaign = async () => {
     }
   };
 
+
+  console.log(campaigns , "=========campaigns========")
+
   const calculateOpenRate = (opened: number, delivered: number) => {
     return delivered > 0 ? ((opened / delivered) * 100).toFixed(1) : "0.0";
   };
@@ -292,13 +295,14 @@ const getListName = (listId: string) => {
 
 const filteredCampaigns = (() => {
   // Multiple safety checks
-  if (!(campaigns as any).campaigns) return [];
-  if (!Array.isArray((campaigns as any).campaigns)) {
-    console.error('campaigns is not an array:', (campaigns as any).campaigns);
-    return [];
-  }
+  // if (!(campaigns as any).campaigns) return [];
+  // if (!Array.isArray((campaigns as any).campaigns)) {
+  //   console.error('campaigns is not an array:', (campaigns as any).campaigns);
+  //   return [];
+  // }
   
-  return (campaigns as any).campaigns.filter((campaign:any) => {
+  return campaigns.filter((campaign:any) => {
+      console.log(campaign, "==========================new campaigns ==========")
     // Check if campaign exists and has required properties
     if (!campaign) return false;
     
@@ -366,9 +370,9 @@ const filteredCampaigns = (() => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+              {/* <Button variant="ghost" size="sm"> */}
                 <MoreHorizontal className="w-4 h-4" />
-              </Button>
+              {/* </Button> */}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => handleCampaignAction("view", campaign)}>
