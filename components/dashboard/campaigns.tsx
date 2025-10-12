@@ -34,6 +34,7 @@ import {
   Pause,
   Play,
   Settings,
+  RefreshCw
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDomainStore } from "@/store/domainStore"
@@ -409,6 +410,21 @@ const filteredCampaigns = (() => {
       },
     },
   ];
+
+
+ if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+        Loading campaigns lists...
+      </div>
+    );
+  }
+
+
+
+
+
 
   return (
     <div className="space-y-6">
