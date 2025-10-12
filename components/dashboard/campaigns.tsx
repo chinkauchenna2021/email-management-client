@@ -93,7 +93,7 @@ export function Campaigns() {
 const safeDomains = Array.isArray(domains) ? domains : [];
 
 // Safe email lists access  
-const safeEmailLists = Array.isArray(emailLists) ? emailLists : [];
+const safeEmailLists = Array.isArray((emailLists as any).emailLists) ? (emailLists as any)?.emailLists : [];
 
 // Safe templates access
 const safeTemplates = Array.isArray(templates) ? templates : [];
@@ -146,7 +146,8 @@ const handleCreateCampaign = async () => {
     // Error is handled by the useEffect above
   }
 };
-
+// emailLists
+    console.log(safeEmailLists , emailLists, "================safeEmailLists==============")
 
   // Debugging logs to verify campaigns is always an array
   useEffect(() => {
@@ -285,19 +286,19 @@ const getDomainName = (domainId: string) => {
 };
 
 const getListName = (listId: string) => {
-  const list = safeEmailLists.find(l => l.id === listId);
+  const list = safeEmailLists.find((l:any) => l.id === listId);
   return list ? list.name : listId;
 };
 
 const filteredCampaigns = (() => {
   // Multiple safety checks
-  if (!campaigns) return [];
-  if (!Array.isArray(campaigns)) {
+  if (!(campaigns as any).campaigns) return [];
+  if (!Array.isArray((campaigns as any).campaigns)) {
     console.error('campaigns is not an array:', (campaigns as any).campaigns);
     return [];
   }
   
-  return campaigns.filter((campaign) => {
+  return (campaigns as any).campaigns.filter((campaign:any) => {
     // Check if campaign exists and has required properties
     if (!campaign) return false;
     
@@ -489,7 +490,7 @@ const filteredCampaigns = (() => {
                         <SelectValue placeholder="Select email list" />
                       </SelectTrigger>
                       <SelectContent>
-                        {safeEmailLists.map((list) => (
+                        {safeEmailLists.map((list:any) => (
                           <SelectItem key={list.id} value={list.id}>
                             {list.name} ({list.totalEmails || 0} subscribers)
                           </SelectItem>

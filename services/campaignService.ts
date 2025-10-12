@@ -40,31 +40,31 @@ export interface CreateCampaignData {
 
 export const CampaignService = {
   async getUserCampaigns() {
-    const response = await api.get('/api/campaigns');
+    const response = await api.get('/campaigns');
     return response.data.campaigns || [];
   },
 
   async createCampaign(campaignData: CreateCampaignData) {
-    const response = await api.post('/api/campaigns', campaignData);
+    const response = await api.post('/campaigns', campaignData);
     return response.data.campaign;
   },
 
   async updateCampaign(campaignId: string, updates: any) {
-    const response = await api.put(`/api/campaigns/${campaignId}`, updates);
+    const response = await api.put(`/campaigns/${campaignId}`, updates);
     return response.data.campaign;
   },
 
   async deleteCampaign(campaignId: string) {
-    await api.delete(`/api/campaigns/${campaignId}`);
+    await api.delete(`/campaigns/${campaignId}`);
   },
 
   async sendCampaign(campaignId: string) {
-    const response = await api.post(`/api/campaigns/${campaignId}/send`);
+    const response = await api.post(`/campaigns/${campaignId}/send`);
     return response.data;
   },
 
   async getCampaignDetails(campaignId: string) {
-    const response = await api.get(`/api/campaigns/${campaignId}`);
+    const response = await api.get(`/campaigns/${campaignId}`);
     return response.data.campaign;
   },
 
