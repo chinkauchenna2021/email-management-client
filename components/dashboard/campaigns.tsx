@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
+import { useRouter } from 'next/navigation'
 import {
   Send,
   Plus,
@@ -51,6 +52,7 @@ export function Campaigns() {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null)
+  const router = useRouter()
   
   const [newCampaign, setNewCampaign] = useState({
     name: "",
@@ -143,6 +145,7 @@ const handleCreateCampaign = async () => {
         ? `Your campaign has been scheduled for ${format(newCampaign.scheduledDate, "PPP 'at' h:mm a")}`
         : "Your campaign has been created successfully.",
     });
+    router.push("/")
   } catch (error) {
     // Error is handled by the useEffect above
   }
@@ -213,6 +216,7 @@ const handleCreateCampaign = async () => {
             title: "Campaign Deleted",
             description: `${campaign.name} has been deleted.`,
           });
+          router.push("/")
           break;
       }
     } catch (error) {

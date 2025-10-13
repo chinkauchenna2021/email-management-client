@@ -48,6 +48,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {useRouter} from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Users,
@@ -105,6 +106,7 @@ export function EmailLists() {
   const [editingList, setEditingList] = useState<EmailList | null>(null);
   const [editListName, setEditListName] = useState("");
   const [editListDescription, setEditListDescription] = useState("");
+  const router = useRouter()
 
   const {
     emailLists,
@@ -320,6 +322,7 @@ export function EmailLists() {
           });
         }, 200);
         await fetchEmailLists(); // Add this line
+        router.push("/")
       } catch (error: any) {
         toast({
           title: "Creation Failed",
@@ -373,6 +376,7 @@ export function EmailLists() {
         title: "List deleted",
         description: "The email list has been deleted successfully.",
       });
+      router.push("/")
     } catch (error) {
       // Error is handled by the useEffect above
     }

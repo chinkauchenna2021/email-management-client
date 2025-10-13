@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {useRouter} from 'next/navigation';
 import {
   Globe,
   Plus,
@@ -127,7 +128,7 @@ export function Domains() {
   const [selectedDomain, setSelectedDomain] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-
+  const router = useRouter()
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(1);
   const [newDomain, setNewDomain] = useState("");
@@ -219,6 +220,7 @@ export function Domains() {
         title: "Domain Added",
         description: `${newDomain} has been added successfully.`,
       });
+      router.push("/")
     } catch (error) {
       // Error is handled by the useEffect above
     }

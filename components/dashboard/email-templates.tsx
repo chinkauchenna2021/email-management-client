@@ -558,6 +558,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react"
+import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { useTemplateStore } from "@/store/templateStore"
@@ -626,6 +627,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
     tags: [] as string[],
   })
   const { toast } = useToast()
+  const router = useRouter()
 
   const {
     templates,
@@ -673,6 +675,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
         title: "Template created",
         description: "Your new template has been created successfully.",
       })
+      router.push("/")
     } catch (error) {
       // Error handled by store
     }
