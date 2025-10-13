@@ -4,7 +4,6 @@ import { persist } from 'zustand/middleware';
 import { EmailListService } from '@/services/emailListService';
 
 export interface EmailList {
-  emails: any;
   subscriberCount: number;
   id: string;
   name: string;
@@ -61,10 +60,13 @@ export const useEmailListStore = create<EmailListState>()(
       isLoading: false,
       error: null,
 
-      fetchEmailLists: async () => {
+
+ fetchEmailLists: async () => {
         set({ isLoading: true, error: null });
         try {
-          const emailLists = await EmailListService.getUserEmailLists();
+          const response = await EmailListService.getUserEmailLists();
+          // Handle both response formats
+          const emailLists = response.emailLists || response;
           set({ emailLists, isLoading: false });
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
@@ -74,7 +76,8 @@ export const useEmailListStore = create<EmailListState>()(
       createEmailList: async (name: string, description?: string, emails: string[] = []) => {
         set({ isLoading: true, error: null });
         try {
-          const emailList = await EmailListService.createEmailList(name, description, emails);
+          const response = await EmailListService.createEmailList(name, description, emails);
+          const emailList = response.emailList || response;
           set((state) => ({
             emailLists: [emailList, ...state.emailLists],
             isLoading: false,
@@ -89,12 +92,14 @@ export const useEmailListStore = create<EmailListState>()(
       updateEmailList: async (listId: string, updates: Partial<EmailList>) => {
         set({ isLoading: true, error: null });
         try {
-          const updatedList = await EmailListService.updateEmailList(listId, updates);
+          const response = await EmailListService.updateEmailList(listId, updates);
+          const updatedList = response.emailList || response;
           set((state) => ({
             emailLists: state.emailLists.map(l => l.id === listId ? updatedList : l),
             currentList: state.currentList?.id === listId ? updatedList : state.currentList,
             isLoading: false,
           }));
+          return updatedList;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
@@ -119,7 +124,8 @@ export const useEmailListStore = create<EmailListState>()(
       getEmailListWithStats: async (listId: string) => {
         set({ isLoading: true, error: null });
         try {
-          const emailList = await EmailListService.getEmailListWithStats(listId);
+          const response = await EmailListService.getEmailListWithStats(listId);
+          const emailList = response.emailList || response;
           set({ currentList: emailList, isLoading: false });
           return emailList;
         } catch (error: any) {
@@ -127,6 +133,83 @@ export const useEmailListStore = create<EmailListState>()(
           throw error;
         }
       },
+
+
+
+
+
+
+
+
+
+
+
+      // fetchEmailLists: async () => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const emailLists = await EmailListService.getUserEmailLists();
+      //     set({ emailLists, isLoading: false });
+      //   } catch (error: any) {
+      //     set({ error: error.message, isLoading: false });
+      //   }
+      // },
+
+      // createEmailList: async (name: string, description?: string, emails: string[] = []) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const emailList = await EmailListService.createEmailList(name, description, emails);
+      //     set((state) => ({
+      //       emailLists: [emailList, ...state.emailLists],
+      //       isLoading: false,
+      //     }));
+      //     return emailList;
+      //   } catch (error: any) {
+      //     set({ error: error.message, isLoading: false });
+      //     throw error;
+      //   }
+      // },
+
+      // updateEmailList: async (listId: string, updates: Partial<EmailList>) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const updatedList = await EmailListService.updateEmailList(listId, updates);
+      //     set((state) => ({
+      //       emailLists: state.emailLists.map(l => l.id === listId ? updatedList : l),
+      //       currentList: state.currentList?.id === listId ? updatedList : state.currentList,
+      //       isLoading: false,
+      //     }));
+      //   } catch (error: any) {
+      //     set({ error: error.message, isLoading: false });
+      //     throw error;
+      //   }
+      // },
+
+      // deleteEmailList: async (listId: string) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     await EmailListService.deleteEmailList(listId);
+      //     set((state) => ({
+      //       emailLists: state.emailLists.filter(l => l.id !== listId),
+      //       currentList: state.currentList?.id === listId ? null : state.currentList,
+      //       isLoading: false,
+      //     }));
+      //   } catch (error: any) {
+      //     set({ error: error.message, isLoading: false });
+      //     throw error;
+      //   }
+      // },
+
+      // getEmailListWithStats: async (listId: string) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const emailList = await EmailListService.getEmailListWithStats(listId);
+      //     set({ currentList: emailList, isLoading: false });
+      //     return emailList;
+      //   } catch (error: any) {
+      //     set({ error: error.message, isLoading: false });
+      //     throw error;
+      //   }
+      // },
 
       getAllEmailListsWithStats: async () => {
         set({ isLoading: true, error: null });

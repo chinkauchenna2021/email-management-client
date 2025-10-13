@@ -368,39 +368,90 @@ export function EmailLists() {
   };
 
   // Handle delete email list
-  const handleDeleteEmailList = async (listId: string) => {
-    try {
-      await deleteEmailList(listId);
-      await fetchEmailLists();
-      toast({
-        title: "List deleted",
-        description: "The email list has been deleted successfully.",
-      });
-      router.push("/")
-    } catch (error) {
-      // Error is handled by the useEffect above
-    }
-  };
 
-  // Handle view email list details
-  const handleViewEmailList = async (listId: string) => {
-    try {
-      await getEmailListWithStats(listId);
-      await getEmailsInList(listId);
-      setSelectedList(listId);
-      setIsViewModalOpen(true);
-    } catch (error) {
-      // Error is handled by the useEffect above
-    }
-  };
+// In your EmailLists component - enhance the handlers
 
-  // Handle edit email list
-  const handleEditEmailList = async (list: EmailList) => {
-    setEditingList(list);
-    setEditListName(list.name);
-    setEditListDescription(list.description || "");
-    setIsEditModalOpen(true);
-  };
+// Handle delete with confirmation
+const handleDeleteEmailList = async (listId: string) => {
+  if (!confirm('Are you sure you want to delete this email list? This action cannot be undone.')) {
+    return;
+  }
+
+  try {
+    await deleteEmailList(listId);
+    await fetchEmailLists();
+    toast({
+      title: "List deleted",
+      description: "The email list has been deleted successfully.",
+    });
+  } catch (error: any) {
+    toast({
+      title: "Delete failed",
+      description: error.message || "Failed to delete email list",
+      variant: "destructive",
+    });
+  }
+};
+
+// Enhanced view handler
+const handleViewEmailList = async (listId: string) => {
+  try {
+    await getEmailListWithStats(listId);
+    await getEmailsInList(listId);
+    setSelectedList(listId);
+    setIsViewModalOpen(true);
+  } catch (error: any) {
+    toast({
+      title: "Failed to load list details",
+      description: error.message || "Please try again",
+      variant: "destructive",
+    });
+  }
+};
+
+// Enhanced edit handler
+const handleEditEmailList = async (list: EmailList) => {
+  setEditingList(list);
+  setEditListName(list.name);
+  setEditListDescription(list.description || "");
+  setIsEditModalOpen(true);
+};
+
+
+
+  // const handleDeleteEmailList = async (listId: string) => {
+  //   try {
+  //     await deleteEmailList(listId);
+  //     await fetchEmailLists();
+  //     toast({
+  //       title: "List deleted",
+  //       description: "The email list has been deleted successfully.",
+  //     });
+  //     router.push("/")
+  //   } catch (error) {
+  //     // Error is handled by the useEffect above
+  //   }
+  // };
+
+  // // Handle view email list details
+  // const handleViewEmailList = async (listId: string) => {
+  //   try {
+  //     await getEmailListWithStats(listId);
+  //     await getEmailsInList(listId);
+  //     setSelectedList(listId);
+  //     setIsViewModalOpen(true);
+  //   } catch (error) {
+  //     // Error is handled by the useEffect above
+  //   }
+  // };
+
+  // // Handle edit email list
+  // const handleEditEmailList = async (list: EmailList) => {
+  //   setEditingList(list);
+  //   setEditListName(list.name);
+  //   setEditListDescription(list.description || "");
+  //   setIsEditModalOpen(true);
+  // };
 
   // Handle update email list
   const handleUpdateEmailList = async () => {
@@ -907,46 +958,39 @@ export function EmailLists() {
                     <CardTitle className="text-lg">{list.name}</CardTitle>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      {/* <Button variant="ghost" className="h-8 w-8 p-0"> */}
-                        <MoreHorizontal className="h-4 w-4" />
-                      {/* </Button> */}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="z-50">
-                      <DropdownMenuItem
-                        onClick={() => handleViewEmailList(list.id)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleEditEmailList(list)}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit List
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleExportEmailList(list)}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Export
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleCopyEmails(list)}
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy Emails
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => handleDeleteEmailList(list.id)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    {/* <Button variant="ghost" className="h-8 w-8 p-0"> */}
+                      <MoreHorizontal className="h-4 w-4" />
+                    {/* </Button> */}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="z-50">
+                    <DropdownMenuItem onClick={() => handleViewEmailList(list.id)}>
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEditEmailList(list)}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit List
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportEmailList(list)}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Export
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCopyEmails(list)}>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Emails
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => handleDeleteEmailList(list.id)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 </div>
                 <CardDescription className="text-sm">
                   {list.description}
@@ -1120,28 +1164,29 @@ export function EmailLists() {
                         {new Date(email.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            {/* <Button variant="ghost" className="h-8 w-8 p-0"> */}
-                              <MoreHorizontal className="h-4 w-4" />
-                            {/* </Button> */}
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => navigator.clipboard.writeText(email.address)}
-                            >
-                              <Copy className="w-4 h-4 mr-2" />
-                              Copy Email
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => console.log("Remove email", email.id)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Remove
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        {/* <Button variant="ghost" className="h-8 w-8 p-0"> */}
+                          <MoreHorizontal className="h-4 w-4" />
+                        {/* </Button> */}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(email.address)}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Email
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => console.log("Remove email", email.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+
                       </TableCell>
                     </TableRow>
                   ))}
