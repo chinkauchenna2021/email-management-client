@@ -69,16 +69,53 @@ export const useEmailListStore = create<EmailListState>()(
           set({ error: error.message, isLoading: false });
         }
       },
+      // createEmailList: async (name: string, description?: string, emails: string[] = []) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const response = await EmailListService.createEmailList(name, description, emails);
+      //     const emailList = response.emailList || response;
+      //     set((state) => ({
+      //       emailLists: [emailList, ...state.emailLists],
+      //       isLoading: false,
+      //     }));
+      //     return emailList;
+      //   } catch (error: any) {
+      //     set({ error: error.message, isLoading: false });
+      //     throw error;
+      //   }
+      // },
+
       createEmailList: async (name: string, description?: string, emails: string[] = []) => {
         set({ isLoading: true, error: null });
         try {
           const response = await EmailListService.createEmailList(name, description, emails);
-          const emailList = response.emailList || response;
+          
+          // Handle different response structures
+          let emailList;
+          if (response && response.emailList) {
+            emailList = response.emailList;
+          } else if (response && response.data) {
+            emailList = response.data;
+          } else {
+            emailList = response;
+          }
+          
+          // Ensure the emailList has the required stats structure
+          const enhancedEmailList = {
+            ...emailList,
+            stats: emailList.stats || {
+              validEmails: emails.length, // Default to all valid if not provided
+              invalidEmails: 0,
+              validityRate: 100
+            }
+          };
+          
           set((state) => ({
-            emailLists: [emailList, ...state.emailLists],
+            emailLists: [enhancedEmailList, ...state.emailLists],
             isLoading: false,
           }));
-          return emailList;
+          
+          return enhancedEmailList;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;

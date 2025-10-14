@@ -122,32 +122,62 @@ export const useDomainStore = create<DomainState>()(
         }
       },
 
-      addDomain: async (domain: string, smtpSettings = {}) => {
-        set({ isLoading: true, error: null });
-        try {
-          const result = await DomainService.addDomain(domain, smtpSettings);
+      // addDomain: async (domain: string, smtpSettings = {}) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const result = await DomainService.addDomain(domain, smtpSettings);
           
-          // Extract domain from response
-          let newDomainData = result;
-          if (result && result.domain) {
-            newDomainData = result.domain;
-          } else if (result && result.data) {
-            newDomainData = result.data;
+      //     // Extract domain from response
+      //     let newDomainData = result;
+      //     if (result && result.domain) {
+      //       newDomainData = result.domain;
+      //     } else if (result && result.data) {
+      //       newDomainData = result.data;
+      //     }
+          
+      //     const normalizedDomain = normalizeDomain(newDomainData);
+          
+      //     set((state: { domains: any; }) => ({
+      //       domains: [...state.domains, normalizedDomain],
+      //       isLoading: false,
+      //     }));
+          
+      //     return normalizedDomain;
+      //   } catch (error: any) {
+      //     set({ error: error.message, isLoading: false });
+      //     throw error;
+      //   }
+      // },
+
+
+        addDomain: async (domain: string, smtpSettings = {}) => {
+          set({ isLoading: true, error: null });
+          try {
+            const result = await DomainService.addDomain(domain, smtpSettings);
+            
+            // Extract domain from response
+            let newDomainData = result;
+            if (result && result.domain) {
+              newDomainData = result.domain;
+            } else if (result && result.data) {
+              newDomainData = result.data;
+            }
+            
+            const normalizedDomain = normalizeDomain(newDomainData);
+            
+            // Force update the domains list
+            set((state: { domains: any; }) => ({
+              domains: [normalizedDomain, ...state.domains], // Add to beginning for immediate visibility
+              isLoading: false,
+            }));
+            
+            return normalizedDomain;
+          } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            throw error;
           }
-          
-          const normalizedDomain = normalizeDomain(newDomainData);
-          
-          set((state: { domains: any; }) => ({
-            domains: [...state.domains, normalizedDomain],
-            isLoading: false,
-          }));
-          
-          return normalizedDomain;
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          throw error;
-        }
-      },
+        },
+
 
       updateDomain: async (domainId: string, updates: Partial<Domain>) => {
         set({ isLoading: true, error: null });

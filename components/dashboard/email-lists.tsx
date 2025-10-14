@@ -256,85 +256,172 @@ export function EmailLists() {
   };
 
   // Handle combined submission (create list and upload emails)
-  const handleCombinedSubmit = async () => {
-    if (currentStep === 1) {
-      // Validate list name and description
-      if (!newListName.trim()) {
+  // const handleCombinedSubmit = async () => {
+  //   if (currentStep === 1) {
+  //     // Validate list name and description
+  //     if (!newListName.trim()) {
+  //       toast({
+  //         title: "Name required",
+  //         description: "Please enter a name for the email list.",
+  //         variant: "destructive",
+  //       });
+  //       return;
+  //     }
+  //     // Move to next step
+  //     setCurrentStep(2);
+  //   } else {
+  //     // Handle email upload and validation
+  //     setIsValidating(true);
+  //     setValidationProgress(0);
+
+  //     try {
+  //       // Determine which emails to upload (from textarea or file)
+  //       const emailsToUpload =
+  //         fileEmails.length > 0
+  //           ? fileEmails.filter(
+  //               (email) =>
+  //                 fileValidationResults.find((r) => r.email === email)
+  //                   ?.status === "valid"
+  //             )
+  //           : emailValidationResults
+  //               .filter((r) => r.status === "valid")
+  //               .map((r) => r.email);
+
+  //       if (emailsToUpload.length === 0) {
+  //         toast({
+  //           title: "No valid emails",
+  //           description: "Please add at least one valid email address.",
+  //           variant: "destructive",
+  //         });
+  //         setIsValidating(false);
+  //         return;
+  //       }
+
+  //       // Simulate validation progress
+  //       const interval = setInterval(() => {
+  //         setValidationProgress((prev) => {
+  //           if (prev >= 100) {
+  //             clearInterval(interval);
+  //             setIsValidating(false);
+
+  //             // First create the email list
+  //             createEmailList(newListName, newListDescription, emailsToUpload)
+  //               .then((newList) => {
+  //                 console.log("List created successfully:", newList);
+  //                 setIsModalOpen(false);
+  //                 resetModalState();
+  //                 toast({
+  //                   title: "List created",
+  //                   description: `Your email list has been created with ${emailsToUpload.length} emails.`,
+  //                 });
+  //               })
+  //               .catch((error) => {
+  //                 // Error is handled by the useEffect above
+  //               });
+  //             return 100;
+  //           }
+  //           return prev + 10;
+  //         });
+  //       }, 200);
+  //       await fetchEmailLists(); // Add this line
+  //       router.push("/")
+  //     } catch (error: any) {
+  //       toast({
+  //         title: "Creation Failed",
+  //         description: error.message || "Failed to create email list",
+  //         variant: "destructive",
+  //       });
+  //       setIsValidating(false);
+  //     }
+  //   }
+  // };
+
+const handleCombinedSubmit = async () => {
+  if (currentStep === 1) {
+    // Validate list name and description
+    if (!newListName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a name for the email list.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Move to next step
+    setCurrentStep(2);
+  } else {
+    // Handle email upload and validation
+    setIsValidating(true);
+    setValidationProgress(0);
+
+    try {
+      // Determine which emails to upload (from textarea or file)
+      const emailsToUpload =
+        fileEmails.length > 0
+          ? fileEmails.filter(
+              (email) =>
+                fileValidationResults.find((r) => r.email === email)
+                  ?.status === "valid"
+            )
+          : emailValidationResults
+              .filter((r) => r.status === "valid")
+              .map((r) => r.email);
+
+      if (emailsToUpload.length === 0) {
         toast({
-          title: "Name required",
-          description: "Please enter a name for the email list.",
+          title: "No valid emails",
+          description: "Please add at least one valid email address.",
           variant: "destructive",
         });
+        setIsValidating(false);
         return;
       }
-      // Move to next step
-      setCurrentStep(2);
-    } else {
-      // Handle email upload and validation
-      setIsValidating(true);
-      setValidationProgress(0);
 
-      try {
-        // Determine which emails to upload (from textarea or file)
-        const emailsToUpload =
-          fileEmails.length > 0
-            ? fileEmails.filter(
-                (email) =>
-                  fileValidationResults.find((r) => r.email === email)
-                    ?.status === "valid"
-              )
-            : emailValidationResults
-                .filter((r) => r.status === "valid")
-                .map((r) => r.email);
+      // Simulate validation progress
+      const interval = setInterval(() => {
+        setValidationProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setIsValidating(false);
 
-        if (emailsToUpload.length === 0) {
-          toast({
-            title: "No valid emails",
-            description: "Please add at least one valid email address.",
-            variant: "destructive",
-          });
-          setIsValidating(false);
-          return;
-        }
-
-        // Simulate validation progress
-        const interval = setInterval(() => {
-          setValidationProgress((prev) => {
-            if (prev >= 100) {
-              clearInterval(interval);
-              setIsValidating(false);
-
-              // First create the email list
-              createEmailList(newListName, newListDescription, emailsToUpload)
-                .then((newList) => {
-                  console.log("List created successfully:", newList);
-                  setIsModalOpen(false);
-                  resetModalState();
+            // Create the email list
+            createEmailList(newListName, newListDescription, emailsToUpload)
+              .then((newList) => {
+                console.log("List created successfully:", newList);
+                setIsModalOpen(false);
+                resetModalState();
+                
+                // Force refresh the email lists
+                fetchEmailLists().then(() => {
                   toast({
                     title: "List created",
                     description: `Your email list has been created with ${emailsToUpload.length} emails.`,
                   });
-                })
-                .catch((error) => {
-                  // Error is handled by the useEffect above
                 });
-              return 100;
-            }
-            return prev + 10;
-          });
-        }, 200);
-        await fetchEmailLists(); // Add this line
-        router.push("/")
-      } catch (error: any) {
-        toast({
-          title: "Creation Failed",
-          description: error.message || "Failed to create email list",
-          variant: "destructive",
+              })
+              .catch((error) => {
+                toast({
+                  title: "Creation Failed",
+                  description: error.message || "Failed to create email list",
+                  variant: "destructive",
+                });
+              });
+            return 100;
+          }
+          return prev + 10;
         });
-        setIsValidating(false);
-      }
+      }, 200);
+      
+    } catch (error: any) {
+      toast({
+        title: "Creation Failed",
+        description: error.message || "Failed to create email list",
+        variant: "destructive",
+      });
+      setIsValidating(false);
     }
-  };
+  }
+};
 
   // Reset modal state
   const resetModalState = () => {

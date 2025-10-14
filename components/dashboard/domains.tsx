@@ -189,42 +189,97 @@ export function Domains() {
     });
   };
 
-  const handleAddDomain = async () => {
-    try {
-      if (!newDomain) {
-        toast({
-          title: "Error",
-          description: "Please enter a domain name",
-          variant: "destructive",
-        });
-        return;
-      }
+  // const handleAddDomain = async () => {
+  //   try {
+  //     if (!newDomain) {
+  //       toast({
+  //         title: "Error",
+  //         description: "Please enter a domain name",
+  //         variant: "destructive",
+  //       });
+  //       return;
+  //     }
 
-      const smtpSettings = {
-        provider: smtpForm.provider,
-        host: smtpForm.host,
-        port: smtpForm.port,
-        security: smtpForm.security,
-        username: smtpForm.username,
-        password: smtpForm.password,
-        dailyLimit: smtpForm.dailyLimit,
-        enableDomainWarmup: smtpForm.enableWarmup,
-      };
+  //     const smtpSettings = {
+  //       provider: smtpForm.provider,
+  //       host: smtpForm.host,
+  //       port: smtpForm.port,
+  //       security: smtpForm.security,
+  //       username: smtpForm.username,
+  //       password: smtpForm.password,
+  //       dailyLimit: smtpForm.dailyLimit,
+  //       enableDomainWarmup: smtpForm.enableWarmup,
+  //     };
 
-      await addDomain(newDomain, smtpSettings);
+  //     await addDomain(newDomain, smtpSettings);
 
-      setIsAddDialogOpen(false);
-      resetForm();
+  //     setIsAddDialogOpen(false);
+  //     resetForm();
 
+  //     toast({
+  //       title: "Domain Added",
+  //       description: `${newDomain} has been added successfully.`,
+  //     });
+  //     router.push("/")
+  //   } catch (error) {
+  //     // Error is handled by the useEffect above
+  //   }
+  // };
+
+const handleAddDomain = async () => {
+  try {
+    if (!newDomain) {
       toast({
-        title: "Domain Added",
-        description: `${newDomain} has been added successfully.`,
+        title: "Error",
+        description: "Please enter a domain name",
+        variant: "destructive",
       });
-      router.push("/")
-    } catch (error) {
-      // Error is handled by the useEffect above
+      return;
     }
-  };
+
+    const smtpSettings = {
+      provider: smtpForm.provider,
+      host: smtpForm.host,
+      port: smtpForm.port,
+      security: smtpForm.security,
+      username: smtpForm.username,
+      password: smtpForm.password,
+      dailyLimit: smtpForm.dailyLimit,
+      enableDomainWarmup: smtpForm.enableWarmup,
+    };
+
+    await addDomain(newDomain, smtpSettings);
+
+    // Close dialog and reset form
+    setIsAddDialogOpen(false);
+    resetForm();
+
+    toast({
+      title: "Domain Added",
+      description: `${newDomain} has been added successfully.`,
+    });
+    
+    // Refresh the domains list to ensure UI is updated
+    await fetchDomains();
+    
+  } catch (error) {
+    // Error is handled by the useEffect above
+    console.error('Failed to add domain:', error);
+  }
+};
+
+
+
+// In the Domains component, after handleAddDomain call
+if (isLoading) {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+      Adding domain...
+    </div>
+  );
+}
+
 
   const handleUpdateDomain = async () => {
     try {
