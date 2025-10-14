@@ -151,7 +151,7 @@ const handleCreateCampaign = async () => {
   }
 };
 // emailLists
-    console.log(safeEmailLists , emailLists, "================safeEmailLists==============")
+    console.log(safeEmailLists , emailLists,"===============campaignStats=========",  "================safeEmailLists==============")
 
   // Debugging logs to verify campaigns is always an array
   useEffect(() => {
@@ -212,11 +212,12 @@ const handleCreateCampaign = async () => {
           break;
         case "delete":
           await deleteCampaign(campaign.id);
-          toast({
-            title: "Campaign Deleted",
-            description: `${campaign.name} has been deleted.`,
-          });
-          router.push("/")
+          console.log("==========DELETE CAMPAIGN======", campaign.id)
+          // toast({
+          //   title: "Campaign Deleted",
+          //   description: `${campaign.name} has been deleted.`,
+          // });
+          // router.push("/")
           break;
       }
     } catch (error) {
@@ -407,6 +408,7 @@ const filteredCampaigns = (() => {
               <DropdownMenuItem className="text-red-600" onClick={() => handleCampaignAction("delete", campaign)}>
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
+                {/* deleteCampaign */}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -516,7 +518,7 @@ const filteredCampaigns = (() => {
                       <SelectContent>
                         {safeEmailLists.map((list:any) => (
                           <SelectItem key={list.id} value={list.id}>
-                            {list.name} ({list.totalEmails || 0} subscribers)
+                            {list.name} ({list.validEmails|| 0} subscribers)
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -646,7 +648,7 @@ const filteredCampaigns = (() => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {campaignStats?.totalEmails ? campaignStats.totalEmails.toLocaleString() : "0"}
+              {(campaignStats as any)?.totalEmailsSent ? (campaignStats as any)?.totalEmailsSent?.toLocaleString() : "0"}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">+8%</span> from last month
