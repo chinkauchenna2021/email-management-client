@@ -15,6 +15,7 @@ import {
   useRecentCampaigns 
 } from "@/hooks/useOverview"
 import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, AwaitedReactNode, Key } from "react"
+import { useCampaignStore } from "@/store/campaignStore"
 
 export function Overview() {
   // Fetch data using our hooks
@@ -22,6 +23,10 @@ export function Overview() {
   const { data: performanceData, isLoading: performanceLoading } = useOverviewPerformance();
   const { data: domains, isLoading: domainsLoading } = useOverviewDomains();
   const { data: recentCampaigns, isLoading: campaignsLoading } = useRecentCampaigns();
+
+    const {
+      campaigns
+    } = useCampaignStore();
 
 
 
@@ -149,7 +154,7 @@ export function Overview() {
             <Send className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCampaigns}</div>
+            <div className="text-2xl font-bold">{(campaigns || []).length}</div>
             <p className="text-xs text-muted-foreground">
               {/* <span className="text-green-500">+12%</span> */}
                from last month

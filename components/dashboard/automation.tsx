@@ -276,9 +276,9 @@ export default function Automation() {
         return <Badge variant="outline">Unknown</Badge>
     }
   }
-
-  const filteredWorkflows = automations.filter(
-    (workflow) =>
+  console.log(automations , "==============automations==========")
+  const filteredWorkflows = (automations as any)?.automations?.filter(
+    (workflow:any) =>
       workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (workflow.description && workflow.description.toLowerCase().includes(searchTerm.toLowerCase()))
   )
@@ -458,11 +458,11 @@ export default function Automation() {
   }
 
   const totalStats = {
-    activeWorkflows: automations.filter(a => a.isActive).length,
+    activeWorkflows: (automations as any)?.automations.filter((a: { isActive: any }) => a.isActive).length,
     totalWorkflows: automations.length,
-    totalEmailsSent: automations.reduce((total:any, workflow:any) => total + (workflow?.stats?.emailsSent || 0), 0),
-    avgSuccessRate: automations.length > 0 
-      ? Math.round(automations.reduce((total:any, workflow:any) => total + (workflow?.stats?.successRate || 0), 0) / automations.length)
+    totalEmailsSent: (automations as any)?.automations.reduce((total:any, workflow:any) => total + (workflow?.stats?.emailsSent || 0), 0),
+    avgSuccessRate: (automations as any)?.automations.length > 0 
+      ? Math.round((automations as any)?.automations.reduce((total:any, workflow:any) => total + (workflow?.stats?.successRate || 0), 0) / automations.length)
       : 0,
   }
 
@@ -1031,7 +1031,7 @@ export default function Automation() {
         <CardContent>
           <DataTable
             columns={workflowColumns}
-            data={filteredWorkflows.map(workflow => ({
+            data={filteredWorkflows.map((workflow: AutomationWorkflow) => ({
               ...workflow,
               stats: calculateStats(workflow)
             }))}

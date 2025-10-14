@@ -44,8 +44,20 @@ export const CampaignService = {
     return response.data.campaigns || [];
   },
 
-  async createCampaign(campaignData: CreateCampaignData) {
-    const response = await api.post('/campaigns', campaignData);
+  // async createCampaign(campaignData: CreateCampaignData) {
+  //   const response = await api.post('/campaigns', campaignData);
+  //   return response.data.campaign;
+  // },
+
+
+ async createCampaign(campaignData: CreateCampaignData) {
+    // The name will be auto-generated on the backend from the subject
+    const payload = {
+      ...campaignData,
+      content: campaignData.content || '<p>Your email content here</p>'
+    };
+    
+    const response = await api.post('/campaigns', payload);
     return response.data.campaign;
   },
 

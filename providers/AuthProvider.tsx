@@ -10,13 +10,18 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { token, isAuthenticated, logout } = useAuthStore();
+  const { token, isAuthenticated, logout, initialize } = useAuthStore();
+
+  useEffect(() => {
+    // Initialize auth state on app start
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
     // Set up axios interceptor for token refresh if needed
     const interceptor = api.interceptors.response.use(
       (response: any) => response,
-      async (error:any) => {
+      async (error: any) => {
         const originalRequest = error.config;
         
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -24,7 +29,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           
           // Try to refresh token or logout
           logout();
-          window.location.href = '/auth/login';
+          // window.location.href = '/auth/login';
         }
         
         return Promise.reject(error);

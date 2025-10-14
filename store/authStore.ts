@@ -1,11 +1,11 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import axios from 'axios';
 
 interface User {
   id: string;
   email: string;
-  name?: string;
+  name?: string; 
   role: string;
   createdAt: string;
 }
@@ -20,6 +20,7 @@ interface AuthState {
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  initialize: () => void;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -33,6 +34,14 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
 
+      initialize: () => {
+        const { token, user } = get();
+        if (token && user) {
+          // Set default axios header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+      },
+
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -40,13 +49,12 @@ export const useAuthStore = create<AuthState>()(
             email,
             password,
           });
-          
-
 
           const { user, token } = response.data;
 
-        //  [debug]  section 
-          // console.log("Login successful:", user , token, "[Debug] Auth Store State:" , get());
+          // Set axios default header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
           set({
             user,
             token,
@@ -74,6 +82,9 @@ export const useAuthStore = create<AuthState>()(
           
           const { user, token } = response.data;
           
+          // Set axios default header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
           set({
             user,
             token,
@@ -91,6 +102,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        // Clear axios header
+        delete axios.defaults.headers.common['Authorization'];
         set({
           user: null,
           token: null,
@@ -102,11 +115,18 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) {
+          // Restore axios header on rehydrate
+          axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+        }
+      },
     }
   )
 );

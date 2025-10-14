@@ -1,7 +1,7 @@
-// // components/ProtectedRoute.tsx
+// components/ProtectedRoute.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
@@ -13,18 +13,25 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useAuthStore();
   const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Wait for store to rehydrate from localStorage
+    if (!isLoading) {
+      setIsChecking(false);
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    if ( !isAuthenticated) {
       router.push('/auth/login');
+      return;
     }
-  }, [isAuthenticated, isLoading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated && requiredRole && user?.role !== requiredRole) {
-      router.push('/unauthorized');
-    }
-  }, [isAuthenticated, user, requiredRole, router]);
+    // if (!isChecking && isAuthenticated) {
+    //   router.push('/unauthorized');
+    // }
+  }, [isAuthenticated, user, router]);
 
   if (isLoading) {
     return (
@@ -38,9 +45,9 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return null;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
-    return null;
-  }
+  // if (requiredRole && user?.role !== requiredRole) {
+  //   return null;
+  // }
 
   return <>{children}</>;
 }

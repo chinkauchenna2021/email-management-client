@@ -17,10 +17,15 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
-  const { login, isLoading, error, clearError } = useAuthStore();
-  const router = useRouter();
 
+  const { login, isLoading, error, clearError , token , user, isAuthenticated  } = useAuthStore();
+  const router = useRouter();
+  
+  if(!isAuthenticated){
+      router.push("/auth/login")
+      return
+  }
+  console.log(token ,user ,isAuthenticated,  "==============token=======")
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
