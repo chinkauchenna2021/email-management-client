@@ -60,19 +60,15 @@ export const useEmailListStore = create<EmailListState>()(
       isLoading: false,
       error: null,
 
-
- fetchEmailLists: async () => {
+      fetchEmailLists: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await EmailListService.getUserEmailLists();
-          // Handle both response formats
-          const emailLists = response.emailLists || response;
+          const emailLists = await EmailListService.getUserEmailLists();
           set({ emailLists, isLoading: false });
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
         }
       },
-
       createEmailList: async (name: string, description?: string, emails: string[] = []) => {
         set({ isLoading: true, error: null });
         try {
@@ -133,6 +129,13 @@ export const useEmailListStore = create<EmailListState>()(
           throw error;
         }
       },
+
+
+
+
+
+
+
 
 
 

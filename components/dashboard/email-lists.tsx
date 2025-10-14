@@ -129,7 +129,9 @@ export function EmailLists() {
 
   useEffect(() => {
     fetchEmailLists();
+    console.log(emailLists, emails , "=============emailLists================")
   }, []);
+
 
   useEffect(() => {
     if (error) {
