@@ -438,19 +438,25 @@ const handleCombinedSubmit = async () => {
 
 // Handle delete with confirmation
 const handleDeleteEmailList = async (listId: string) => {
-  if (!confirm('Are you sure you want to delete this email list? This action cannot be undone.')) {
+  // Find the list name for the confirmation message
+  const listToDelete = emailLists.find(list => list.id === listId);
+  
+  if (!confirm(`Are you sure you want to delete the email list "${listToDelete?.name}"? This action cannot be undone.`)) {
     return;
   }
 
   try {
     await deleteEmailList(listId);
+    
+    // The store update should automatically remove it from the UI
+    // But let's also explicitly refresh to ensure consistency
     await fetchEmailLists();
-    toast( "The email list has been deleted successfully.");
+
+    toast("The email list has been deleted successfully.");
   } catch (error: any) {
     toast(error.message || "Failed to delete email list");
   }
 };
-
 // Enhanced view handler
 const handleViewEmailList = async (listId: string) => {
   try {

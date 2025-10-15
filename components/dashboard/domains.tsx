@@ -294,16 +294,44 @@ if (isLoading) {
     }
   };
 
-  const handleDeleteDomain = async (domain: any) => {
-    try {
-      await deleteDomain(domain.id);
+const handleDeleteDomain = async (domain: any) => {
+  try {
+    // Show confirmation dialog
+    if (!confirm(`Are you sure you want to delete the domain "${domain.domain}"? This action cannot be undone.`)) {
+      return;
+    }
 
-      toast.success(`${domain.domain} has been deleted.`,
-      );
-    } catch (error) {
-      // Error is handled by the useEffect above
+    await deleteDomain(domain.id);
+    
+    // The store update should automatically remove it from the UI
+    // But let's also explicitly refresh to ensure consistency
+    await fetchDomains();
+
+    toast(`${domain.domain} has been deleted successfully.`);
+  } catch (error) {
+    // Error is handled by the useEffect above
+    console.error('Failed to delete domain:', error);
+  }
+};
+
+
+
+// In your components
+useEffect(() => {
+  let isMounted = true;
+  
+  const loadData = async () => {
+    if (isMounted) {
+      await fetchDomains(); // or fetchEmailLists()
     }
   };
+  
+  loadData();
+  
+  return () => {
+    isMounted = false;
+  };
+}, [fetchDomains]);
 
   const handleVerifyDomain = async (domain: any) => {
     try {

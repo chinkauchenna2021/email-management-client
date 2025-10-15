@@ -139,20 +139,20 @@ export const useEmailListStore = create<EmailListState>()(
         }
       },
 
-      deleteEmailList: async (listId: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          await EmailListService.deleteEmailList(listId);
-          set((state) => ({
-            emailLists: state.emailLists.filter(l => l.id !== listId),
-            currentList: state.currentList?.id === listId ? null : state.currentList,
-            isLoading: false,
-          }));
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          throw error;
-        }
-      },
+deleteEmailList: async (listId: string) => {
+  set({ isLoading: true, error: null });
+  try {
+    await EmailListService.deleteEmailList(listId);
+    set((state) => ({
+      emailLists: state.emailLists.filter(l => l.id !== listId),
+      currentList: state.currentList?.id === listId ? null : state.currentList,
+      isLoading: false,
+    }));
+  } catch (error: any) {
+    set({ error: error.message, isLoading: false });
+    throw error;
+  }
+},
 
       getEmailListWithStats: async (listId: string) => {
         set({ isLoading: true, error: null });

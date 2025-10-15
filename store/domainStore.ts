@@ -206,20 +206,22 @@ export const useDomainStore = create<DomainState>()(
         }
       },
 
-      deleteDomain: async (domainId: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          await DomainService.deleteDomain(domainId);
-          set((state: { domains: any[]; currentDomain: { id: string; }; }) => ({
-            domains: state.domains.filter(d => d.id !== domainId),
-            currentDomain: state.currentDomain?.id === domainId ? null : state.currentDomain,
-            isLoading: false,
-          }));
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          throw error;
-        }
-      },
+deleteDomain: async (domainId: string) => {
+  console.log('Deleting domain:', domainId);
+  console.log('Current domains before delete:', get().domains.map((d: { id: any; domain: any; }) => ({ id: d.id, domain: d.domain })));
+  set({ isLoading: true, error: null });
+  try {
+    await DomainService.deleteDomain(domainId);
+    set((state: { domains: any[]; currentDomain: { id: string; }; }) => ({
+      domains: state.domains.filter(d => d.id !== domainId),
+      currentDomain: state.currentDomain?.id === domainId ? null : state.currentDomain,
+      isLoading: false,
+    }));
+  } catch (error: any) {
+    set({ error: error.message, isLoading: false });
+    throw error;
+  }
+},
 
       verifyDomain: async (domainId: string) => {
         set({ isLoading: true, error: null });
