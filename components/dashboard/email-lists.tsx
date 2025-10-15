@@ -70,6 +70,9 @@ import {
 } from "lucide-react";
 import { EmailList, useEmailListStore } from "@/store/emailListStore";
 import {  toast } from 'react-toastify';
+import { useEmailValidation } from "@/hooks/useEmailValidation";
+import { ValidationStats } from "../email-validation/ValidationStats";
+import { EmailValidationItem } from "../email-validation/EmailValidationItem";
 
 export function EmailLists() {
   // Combined dialog state
@@ -126,6 +129,165 @@ export function EmailLists() {
     clearError,
   } = useEmailListStore();
 
+
+// Inside your EmailLists component, add the validation hook
+const {
+  results: validationResults,
+  loading: validationLoading,
+  validateEmail,
+  validateBatch,
+  clearValidation
+} = useEmailValidation();
+
+
+
+
+const handleEmailInput = async (value: string) => {
+  setBulkEmails(value);
+
+  // Extract emails from text
+  const emails = value
+    .split(/[,\s\n]+/)
+    .filter((email) => email.trim() !== '');
+
+  // Clear validation for removed emails
+  Object.keys(validationResults).forEach(email => {
+    if (!emails.includes(email)) {
+      clearValidation(email);
+    }
+  });
+
+  // Validate new emails
+  const newEmails = emails.filter(email => 
+    !validationResults[email] && !validationLoading.has(email)
+  );
+
+  if (newEmails.length > 0) {
+    if (newEmails.length === 1) {
+      validateEmail(newEmails[0]);
+    } else {
+      validateBatch(newEmails);
+    }
+  }
+};
+
+// Enhanced validation display component
+const EnhancedValidationDisplay = () => {
+  const emails = bulkEmails
+    .split(/[,\s\n]+/)
+    .filter((email) => email.trim() !== '');
+
+  if (emails.length === 0) {
+    return null;
+  }
+
+  const validCount = emails.filter(email => 
+    validationResults[email]?.isValid
+  ).length;
+  
+  const invalidCount = emails.filter(email => 
+    validationResults[email] && !validationResults[email]?.isValid
+  ).length;
+  
+  const pendingCount = emails.filter(email => 
+    validationLoading.has(email) || !validationResults[email]
+  ).length;
+
+  return (
+    <div className="space-y-4">
+      {/* Validation Stats */}
+      <ValidationStats 
+        total={emails.length}
+        valid={validCount}
+        invalid={invalidCount}
+        pending={pendingCount}
+      />
+
+      {/* Email List with Validation */}
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {emails.map((email, index) => (
+          <EmailValidationItem
+            key={`${email}-${index}`}
+            email={email}
+            result={validationResults[email]}
+            isLoading={validationLoading.has(email)}
+            onRemove={(emailToRemove) => {
+              // Remove from textarea
+              const newEmails = emails.filter(e => e !== emailToRemove);
+              setBulkEmails(newEmails.join('\n'));
+              clearValidation(emailToRemove);
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Quick Actions */}
+      {emails.length > 0 && (
+        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="text-sm text-blue-700">
+            {pendingCount > 0 
+              ? `Validating ${pendingCount} emails...` 
+              : 'All emails validated'
+            }
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => validateBatch(emails)}
+              disabled={pendingCount === 0}
+            >
+              Re-validate All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setBulkEmails('');
+                clearValidation();
+              }}
+            >
+              Clear All
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
     fetchEmailLists();
     console.log(emailLists, emails , "=============emailLists================")
@@ -140,45 +302,45 @@ export function EmailLists() {
   }, [error, toast, clearError]);
 
   // Email validation function
-  const validateEmail = (
-    email: string
-  ): { status: "valid" | "invalid"; error?: string } => {
-    if (!email.trim()) {
-      return { status: "invalid", error: "Email is required" };
-    }
+  // const validateEmail = (
+  //   email: string
+  // ): { status: "valid" | "invalid"; error?: string } => {
+  //   if (!email.trim()) {
+  //     return { status: "invalid", error: "Email is required" };
+  //   }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return { status: "invalid", error: "Invalid email format" };
-    }
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   if (!emailRegex.test(email)) {
+  //     return { status: "invalid", error: "Invalid email format" };
+  //   }
 
-    return { status: "valid" };
-  };
+  //   return { status: "valid" };
+  // };
 
   // Handle email input with real-time validation
-  const handleEmailInput = (value: string) => {
-    setBulkEmails(value);
+  // const handleEmailInput = (value: string) => {
+  //   setBulkEmails(value);
 
-    // Extract the current line being typed
-    const lines = value.split("\n");
-    const currentLine = lines[lines.length - 1];
-    setCurrentEmail(currentLine);
+  //   // Extract the current line being typed
+  //   const lines = value.split("\n");
+  //   const currentLine = lines[lines.length - 1];
+  //   setCurrentEmail(currentLine);
 
-    // Validate all emails
-    const emails = value
-      .split(/[,\s\n]+/)
-      .filter((email) => email.trim() !== "");
-    const results = emails.map((email) => {
-      const validation = validateEmail(email.trim());
-      return {
-        email: email.trim(),
-        status: validation.status,
-        error: validation.error,
-      };
-    });
+  //   // Validate all emails
+  //   const emails = value
+  //     .split(/[,\s\n]+/)
+  //     .filter((email) => email.trim() !== "");
+  //   const results = emails.map((email) => {
+  //     const validation = validateEmail(email.trim()) as any;
+  //     return {
+  //       email: email.trim(),
+  //       status: validation.status,
+  //       error: validation.error,
+  //     };
+  //   });
 
-    setEmailValidationResults(results);
-  };
+  //   setEmailValidationResults(results);
+  // };
 
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,7 +395,7 @@ export function EmailLists() {
         const batch = emails.slice(processed, processed + batchSize);
 
         const batchResults = batch.map((email) => {
-          const validation = validateEmail(email.trim());
+          const validation = validateEmail(email.trim()) as any;
           return {
             email: email.trim(),
             status: validation.status,
@@ -543,7 +705,7 @@ const handleEditEmailList = async (list: EmailList) => {
       // Create CSV content
       const headers = "Email Address,Status,Added Date\n";
       const csvContent = emails
-        .map((email) => 
+        .map((email:any) => 
           `"${email.address}",${email.valid ? "Valid" : "Invalid"},"${new Date(email.createdAt).toLocaleDateString()}"`
         )
         .join("\n");
@@ -571,7 +733,7 @@ const handleEditEmailList = async (list: EmailList) => {
   const handleCopyEmails = async (list: EmailList) => {
     try {
       await getEmailsInList(list.id);
-      const emailList = emails.map(email => email.address).join("\n");
+      const emailList = emails.map((email:any) => email.address).join("\n");
       await navigator.clipboard.writeText(emailList);
       
       toast(`Copied ${emails.length} emails to clipboard.`);
@@ -599,7 +761,7 @@ const handleEditEmailList = async (list: EmailList) => {
   );
 
   // Filter emails for the view modal
-  const filteredEmails = emails.filter(email =>
+  const filteredEmails = emails.filter((email:any) =>
     email.address.toLowerCase().includes(emailSearchTerm.toLowerCase())
   );
 
@@ -688,7 +850,7 @@ const handleEditEmailList = async (list: EmailList) => {
                       <TabsTrigger value="upload">Upload File</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="paste" className="space-y-4">
+                    {/* <TabsContent value="paste" className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="emails">Email Addresses</Label>
                         <Textarea
@@ -731,7 +893,6 @@ const handleEditEmailList = async (list: EmailList) => {
                         </div>
                       </div>
 
-                      {/* Real-time validation results */}
                       {emailValidationResults.length > 0 && (
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
@@ -771,8 +932,7 @@ const handleEditEmailList = async (list: EmailList) => {
                         </div>
                       )}
 
-                      {/* Current email validation */}
-                      {currentEmail && (
+                     {currentEmail && (
                         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
                           <div className="flex items-center space-x-2">
                             <span className="text-sm font-medium">
@@ -798,8 +958,32 @@ const handleEditEmailList = async (list: EmailList) => {
                             )}
                           </div>
                         </div>
-                      )}
-                    </TabsContent>
+                      )} 
+                      <EnhancedValidationDisplay/>
+
+                    </TabsContent> */}
+                      <TabsContent value="paste" className="space-y-6">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="emails">Email Addresses</Label>
+                            <Textarea
+                              ref={textareaRef}
+                              id="emails"
+                              placeholder="john@example.com&#10;jane@company.com&#10;user@domain.co"
+                              value={bulkEmails}
+                              onChange={(e) => handleEmailInput(e.target.value)}
+                              rows={6}
+                              className="resize-none font-mono text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Enter one email per line. Validation happens automatically as you type.
+                            </p>
+                          </div>
+
+                          {/* Enhanced Validation Display */}
+                          <EnhancedValidationDisplay />
+                        </div>
+                      </TabsContent>
 
                     <TabsContent value="upload" className="space-y-4">
                       <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
@@ -1179,7 +1363,7 @@ const handleEditEmailList = async (list: EmailList) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmails.map((email) => (
+                  {filteredEmails.map((email:any) => (
                     <TableRow key={email.id}>
                       <TableCell className="font-medium">
                         {email.address}
@@ -1240,13 +1424,13 @@ const handleEditEmailList = async (list: EmailList) => {
                   <div className="flex items-center space-x-1">
                     <CheckCircle className="w-3 h-3 text-green-500" />
                     <span>
-                      {emails.filter(e => e.valid).length} valid
+                      {emails.filter((e:any) => e.valid).length} valid
                     </span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <XCircle className="w-3 h-3 text-red-500" />
                     <span>
-                      {emails.filter(e => !e.valid).length} invalid
+                      {emails.filter((e:any) => !e.valid).length} invalid
                     </span>
                   </div>
                 </div>
