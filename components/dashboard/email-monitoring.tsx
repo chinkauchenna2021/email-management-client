@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { EnhancedModal } from "@/components/ui/enhanced-modal"
 import { useModal, useProgress } from "@/components/ui/modal-manager"
+import {  toast } from 'react-toastify';
 import {
   Activity,
   TrendingUp,

@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react'
 
 function EmailMonitoringPage() {
       const { token, isAuthenticated, logout } = useAuthStore();
-      const [activeSection, setActiveSection] = useState("emailmonitoring")
+      const [activeSection, setActiveSection] = useState("/emailmonitoring")
       const router = useRouter()
       const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
       console.log(token , isAuthenticated)

@@ -69,10 +69,9 @@ import {
   Copy,
 } from "lucide-react";
 import { EmailList, useEmailListStore } from "@/store/emailListStore";
-import { useToast } from "@/hooks/use-toast";
+import {  toast } from 'react-toastify';
 
 export function EmailLists() {
-  const { toast } = useToast();
   // Combined dialog state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -135,11 +134,7 @@ export function EmailLists() {
 
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      });
+      toast(error.toString());
       clearError();
     }
   }, [error, toast, clearError]);
@@ -340,11 +335,7 @@ const handleCombinedSubmit = async () => {
   if (currentStep === 1) {
     // Validate list name and description
     if (!newListName.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a name for the email list.",
-        variant: "destructive",
-      });
+      toast("Please enter a name for the email list.");
       return;
     }
     // Move to next step
@@ -368,11 +359,7 @@ const handleCombinedSubmit = async () => {
               .map((r) => r.email);
 
       if (emailsToUpload.length === 0) {
-        toast({
-          title: "No valid emails",
-          description: "Please add at least one valid email address.",
-          variant: "destructive",
-        });
+        toast("Please add at least one valid email address.");
         setIsValidating(false);
         return;
       }
@@ -393,18 +380,11 @@ const handleCombinedSubmit = async () => {
                 
                 // Force refresh the email lists
                 fetchEmailLists().then(() => {
-                  toast({
-                    title: "List created",
-                    description: `Your email list has been created with ${emailsToUpload.length} emails.`,
-                  });
+                  toast(`Your email list has been created with ${emailsToUpload.length} emails.`);
                 });
               })
               .catch((error) => {
-                toast({
-                  title: "Creation Failed",
-                  description: error.message || "Failed to create email list",
-                  variant: "destructive",
-                });
+                toast( error.message || "Failed to create email list");
               });
             return 100;
           }
@@ -413,11 +393,7 @@ const handleCombinedSubmit = async () => {
       }, 200);
       
     } catch (error: any) {
-      toast({
-        title: "Creation Failed",
-        description: error.message || "Failed to create email list",
-        variant: "destructive",
-      });
+      toast( error.message || "Failed to create email list");
       setIsValidating(false);
     }
   }
@@ -469,16 +445,9 @@ const handleDeleteEmailList = async (listId: string) => {
   try {
     await deleteEmailList(listId);
     await fetchEmailLists();
-    toast({
-      title: "List deleted",
-      description: "The email list has been deleted successfully.",
-    });
+    toast( "The email list has been deleted successfully.");
   } catch (error: any) {
-    toast({
-      title: "Delete failed",
-      description: error.message || "Failed to delete email list",
-      variant: "destructive",
-    });
+    toast(error.message || "Failed to delete email list");
   }
 };
 
@@ -490,11 +459,7 @@ const handleViewEmailList = async (listId: string) => {
     setSelectedList(listId);
     setIsViewModalOpen(true);
   } catch (error: any) {
-    toast({
-      title: "Failed to load list details",
-      description: error.message || "Please try again",
-      variant: "destructive",
-    });
+    toast(error.message || "Please try again");
   }
 };
 
@@ -545,11 +510,7 @@ const handleEditEmailList = async (list: EmailList) => {
   // Handle update email list
   const handleUpdateEmailList = async () => {
     if (!editingList || !editListName.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a name for the email list.",
-        variant: "destructive",
-      });
+      toast("Please enter a name for the email list.");
       return;
     }
 
@@ -561,10 +522,7 @@ const handleEditEmailList = async (list: EmailList) => {
       await fetchEmailLists();
       setIsEditModalOpen(false);
       setEditingList(null);
-      toast({
-        title: "List updated",
-        description: "The email list has been updated successfully.",
-      });
+      toast("The email list has been updated successfully.");
     } catch (error) {
       // Error is handled by the useEffect above
     }
@@ -597,16 +555,9 @@ const handleEditEmailList = async (list: EmailList) => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast({
-        title: "Export successful",
-        description: `Exported ${emails.length} emails to CSV.`,
-      });
+      toast(`Exported ${emails.length} emails to CSV.`);
     } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "Failed to export email list.",
-        variant: "destructive",
-      });
+      toast("Failed to export email list.");
     }
   };
 
@@ -617,16 +568,9 @@ const handleEditEmailList = async (list: EmailList) => {
       const emailList = emails.map(email => email.address).join("\n");
       await navigator.clipboard.writeText(emailList);
       
-      toast({
-        title: "Copied to clipboard",
-        description: `Copied ${emails.length} emails to clipboard.`,
-      });
+      toast(`Copied ${emails.length} emails to clipboard.`);
     } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Failed to copy emails to clipboard.",
-        variant: "destructive",
-      });
+      toast( "Failed to copy emails to clipboard.");
     }
   };
 

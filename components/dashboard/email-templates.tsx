@@ -560,8 +560,8 @@ import {
 } from "lucide-react"
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
 import { useTemplateStore } from "@/store/templateStore"
+import {  toast } from 'react-toastify';
 
 interface EmailTemplate {
   id?: string
@@ -626,7 +626,6 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
     htmlContent: "",
     tags: [] as string[],
   })
-  const { toast } = useToast()
   const router = useRouter()
 
   const {
@@ -650,11 +649,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
 
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      })
+      toast(error.toString())
       clearError()
     }
   }, [error, toast, clearError])
@@ -671,10 +666,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
         htmlContent: "",
         tags: [],
       })
-      toast({
-        title: "Template created",
-        description: "Your new template has been created successfully.",
-      })
+      toast("Your new template has been created successfully.")
       router.push("/")
     } catch (error) {
       // Error handled by store
@@ -686,10 +678,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
       await deleteTemplate(templateId)
       setDeleteDialogOpen(false)
       setTemplateToDelete(null)
-      toast({
-        title: "Template deleted",
-        description: "The template has been deleted successfully.",
-      })
+      toast("The template has been deleted successfully.")
     } catch (error) {
       // Error handled by store
     }
@@ -710,20 +699,14 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
   const handleSelectTemplate = (template: EmailTemplate) => {
     onSelectTemplate?.(template)
     setCurrentTemplate(template as any)
-    toast({
-      title: "Template selected",
-      description: `"${template.name}" has been loaded into the editor.`,
-    })
+    toast(`"${template.name}" has been loaded into the editor.`)
   }
 
   const handleCopyTemplate = (template: EmailTemplate) => {
     navigator.clipboard.writeText(template.htmlContent)
     setCopiedId(String(template.id))
     setTimeout(() => setCopiedId(null), 2000)
-    toast({
-      title: "Template copied",
-      description: "HTML content copied to clipboard.",
-    })
+    toast("HTML content copied to clipboard.")
   }
 
   const handlePreview = (template: EmailTemplate) => {

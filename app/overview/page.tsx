@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const { fetchTemplates } = useTemplateStore();
   const { fetchAutomations } = useAutomationStore();
       const { token, isAuthenticated, logout } = useAuthStore();
-      const [activeSection, setActiveSection] = useState("emailmonitoring")
+      const [activeSection, setActiveSection] = useState("/overview")
       const router = useRouter()
       const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
       console.log(token , isAuthenticated)

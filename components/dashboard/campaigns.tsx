@@ -768,9 +768,10 @@ import { useDomainStore } from "@/store/domainStore"
 import { useEmailListStore } from "@/store/emailListStore"
 import { useCampaignStore } from "@/store/campaignStore"
 import { useToast } from "@/hooks/use-toast"
+import {  toast } from 'react-toastify';
+
 
 export function Campaigns() {
-  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
   
@@ -805,11 +806,9 @@ export function Campaigns() {
 
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      });
+      toast.error(
+        error.toString()
+      );
       clearError();
     }
   }, [error, toast, clearError]);
@@ -839,31 +838,19 @@ export function Campaigns() {
             status: 'DRAFT' as const,
           };
           await useCampaignStore.getState().createCampaign(duplicateData);
-          toast({
-            title: "Campaign Duplicated",
-            description: `${campaign.name} has been duplicated successfully.`,
-          });
+          toast(`${campaign.name} has been duplicated successfully.`);
           break;
         case "pause":
           await updateCampaign(campaign.id, { status: 'PAUSED' });
-          toast({
-            title: "Campaign Paused",
-            description: `${campaign.name} has been paused.`,
-          });
+          toast(`${campaign.name} has been paused.`);
           break;
         case "resume":
           await updateCampaign(campaign.id, { status: 'READY' });
-          toast({
-            title: "Campaign Resumed",
-            description: `${campaign.name} has been resumed.`,
-          });
+          toast(`${campaign.name} has been resumed.`);
           break;
         case "send":
           await sendCampaign(campaign.id);
-          toast({
-            title: "Campaign Sending",
-            description: `${campaign.name} is now being sent.`,
-          });
+          toast(`${campaign.name} is now being sent.`);
           break;
         case "delete":
           await deleteCampaign(campaign.id);

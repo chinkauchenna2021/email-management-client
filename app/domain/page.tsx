@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react'
 
 function DomainPage() {
   const { token, isAuthenticated, logout } = useAuthStore();
-  const [activeSection, setActiveSection] = useState("domain")
+  const [activeSection, setActiveSection] = useState("/domain")
   const router = useRouter()
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
   console.log(token , isAuthenticated)

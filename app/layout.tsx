@@ -8,6 +8,7 @@ import { Suspense } from "react"
 import { AuthProvider } from "@/providers/AuthProvider"
 import { QueryProvider } from '@/providers/query-provider'
 import { Sidebar } from "@/components/layout/sidebar"
+ import { ToastContainer , Bounce} from 'react-toastify';
 
 export const metadata: Metadata = {
   title: "EmailFlow - Advanced Email Management",
@@ -27,6 +28,19 @@ export default function RootLayout({
            {/* <AuthProvider > */}
             <QueryProvider>
                {children}
+               <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                transition={Bounce}
+                />
             </QueryProvider>
            {/* </AuthProvider> */}
           <Analytics />

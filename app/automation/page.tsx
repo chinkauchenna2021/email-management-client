@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react'
 
 function AutomationPage() {
         const { token, isAuthenticated, logout } = useAuthStore();
-  const [activeSection, setActiveSection] = useState("automation")
+  const [activeSection, setActiveSection] = useState("/automation")
   const router = useRouter()
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
   console.log(token , isAuthenticated)

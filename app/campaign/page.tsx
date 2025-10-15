@@ -9,7 +9,7 @@ import { Campaign } from '@/services/campaignService';
 
 function CampaignPage() {
   const { token, isAuthenticated, logout } = useAuthStore();
-  const [activeSection, setActiveSection] = useState("campaign")
+  const [activeSection, setActiveSection] = useState("/campaign")
   const router = useRouter()
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
   console.log(token , isAuthenticated)

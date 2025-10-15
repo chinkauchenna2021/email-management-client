@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react'
 
 function SettingsPage() {
       const { token, isAuthenticated, logout } = useAuthStore();
-      const [activeSection, setActiveSection] = useState("settings")
+      const [activeSection, setActiveSection] = useState("/settings")
       const router = useRouter()
       const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
       console.log(token , isAuthenticated)

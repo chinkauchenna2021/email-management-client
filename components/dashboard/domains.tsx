@@ -64,7 +64,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useDomainStore } from "@/store/domainStore";
-import { useToast } from "@/hooks/use-toast";
+import {  toast } from 'react-toastify';
 
 export const smtpProviders = [
   { 
@@ -121,7 +121,6 @@ const isWarmupEnabled = (domain: any): boolean => {
 };
 
 export function Domains() {
-  const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false);
@@ -165,11 +164,7 @@ export function Domains() {
 
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      });
+      toast(error);
       clearError();
     }
   }, [error, toast, clearError]);
@@ -229,11 +224,7 @@ export function Domains() {
 const handleAddDomain = async () => {
   try {
     if (!newDomain) {
-      toast({
-        title: "Error",
-        description: "Please enter a domain name",
-        variant: "destructive",
-      });
+      toast("Please enter a domain name" );
       return;
     }
 
@@ -254,10 +245,7 @@ const handleAddDomain = async () => {
     setIsAddDialogOpen(false);
     resetForm();
 
-    toast({
-      title: "Domain Added",
-      description: `${newDomain} has been added successfully.`,
-    });
+    toast(`${newDomain} has been added successfully.`);
     
     // Refresh the domains list to ensure UI is updated
     await fetchDomains();
@@ -300,10 +288,7 @@ if (isLoading) {
 
       setIsConfigDialogOpen(false);
 
-      toast({
-        title: "Domain Updated",
-        description: `${selectedDomain.domain} has been updated successfully.`,
-      });
+      toast.success( `${selectedDomain.domain} has been updated successfully.`);
     } catch (error) {
       // Error is handled by the useEffect above
     }
@@ -313,10 +298,8 @@ if (isLoading) {
     try {
       await deleteDomain(domain.id);
 
-      toast({
-        title: "Domain Deleted",
-        description: `${domain.domain} has been deleted.`,
-      });
+      toast.success(`${domain.domain} has been deleted.`,
+      );
     } catch (error) {
       // Error is handled by the useEffect above
     }
@@ -326,10 +309,8 @@ if (isLoading) {
     try {
       await verifyDomain(domain.id);
 
-      toast({
-        title: "Verification Initiated",
-        description: `Verification for ${domain.domain} has been initiated.`,
-      });
+      toast.success(`Verification for ${domain.domain} has been initiated.`,
+      );
     } catch (error) {
       // Error is handled by the useEffect above
     }
@@ -342,10 +323,7 @@ if (isLoading) {
     try {
       await testSmtpSettings(selectedDomain.id);
 
-      toast({
-        title: "Connection Test",
-        description: "SMTP connection test completed successfully.",
-      });
+      toast("SMTP connection test completed successfully.");
     } catch (error) {
       // Error is handled by the useEffect above
     } finally {
@@ -409,10 +387,8 @@ if (isLoading) {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied to Clipboard",
-      description: "DNS record has been copied to your clipboard.",
-    });
+    toast("DNS record has been copied to your clipboard.",
+    );
   };
 
   const handleProviderChange = (provider: string) => {
@@ -430,11 +406,7 @@ if (isLoading) {
   // Step navigation handlers
   const handleNextStep = () => {
     if (currentStep === 1 && !newDomain) {
-      toast({
-        title: "Error",
-        description: "Please enter a domain name",
-        variant: "destructive",
-      });
+      toast("Please enter a domain name");
       return;
     }
     setCurrentStep(currentStep + 1);

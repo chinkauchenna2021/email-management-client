@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { useToast } from "@/hooks/use-toast"
+import {  toast } from 'react-toastify';
 import {
   User,
   Palette,
@@ -80,7 +80,7 @@ interface APIKey {
 }
 
 export default function Settings() {
-  const { toast } = useToast()
+  // const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("account")
   const [showApiKey, setShowApiKey] = useState<string | null>(null)
   const [isGeneratingKey, setIsGeneratingKey] = useState(false)
@@ -167,24 +167,15 @@ export default function Settings() {
   const [uiDensity, setUiDensity] = useState("comfortable")
 
   const handleSaveProfile = () => {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile settings have been saved successfully.",
-    })
+    toast("Your profile settings have been saved successfully.")
   }
 
   const handleSaveNotifications = () => {
-    toast({
-      title: "Notifications Updated",
-      description: "Your notification preferences have been saved.",
-    })
+    toast("Your notification preferences have been saved.")
   }
 
   const handleSaveEmailSettings = () => {
-    toast({
-      title: "Email Settings Updated",
-      description: "Your email configuration has been saved.",
-    })
+    toast("Your email configuration has been saved.")
   }
 
   const handleGenerateApiKey = async () => {
@@ -204,26 +195,17 @@ export default function Settings() {
     setApiKeys([...apiKeys, newKey])
     setIsGeneratingKey(false)
 
-    toast({
-      title: "API Key Generated",
-      description: "Your new API key has been created successfully.",
-    })
+    toast("Your new API key has been created successfully.")
   }
 
   const handleDeleteApiKey = (keyId: string) => {
     setApiKeys(apiKeys.filter((key) => key.id !== keyId))
-    toast({
-      title: "API Key Deleted",
-      description: "The API key has been permanently deleted.",
-    })
+    toast("The API key has been permanently deleted.")
   }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast({
-      title: "Copied to Clipboard",
-      description: "The API key has been copied to your clipboard.",
-    })
+    toast("The API key has been copied to your clipboard.")
   }
 
   return (

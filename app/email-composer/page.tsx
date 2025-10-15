@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react'
 
 function EmailComposerPage() {
       const { token, isAuthenticated, logout } = useAuthStore();
-      const [activeSection, setActiveSection] = useState("email-composer")
+      const [activeSection, setActiveSection] = useState("/email-composer")
       const router = useRouter()
       const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
       console.log(token , isAuthenticated)

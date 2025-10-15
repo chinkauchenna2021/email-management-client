@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 export default function TemplatesPage() {
 
       const { token, isAuthenticated, logout } = useAuthStore();
-      const [activeSection, setActiveSection] = useState("templates")
+      const [activeSection, setActiveSection] = useState("/templates")
       const router = useRouter()
       const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
       console.log(token , isAuthenticated)
