@@ -277,11 +277,12 @@ export default function Automation() {
     }
   }
   console.log(automations , "==============automations==========")
-  const filteredWorkflows = (automations as any)?.automations?.filter(
+  const filteredWorkflows = (automations as any)?.automations?.filter?.(
     (workflow:any) =>
-      workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (workflow.description && workflow.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+      workflow?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (workflow?.description && workflow.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  ) || []
+
 
   const workflowColumns = [
     {
@@ -293,17 +294,17 @@ export default function Automation() {
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <Workflow className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{workflow.name}</span>
+              <span className="font-medium">{workflow?.name || 'Unnamed Workflow'}</span>
             </div>
-            {workflow.description && (
+            {workflow?.description && (
               <p className="text-sm text-muted-foreground">{workflow.description}</p>
             )}
             <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-              <span>{getTriggerLabel(workflow.trigger)}</span>
+              <span>{getTriggerLabel(workflow?.trigger)}</span>
               <span>•</span>
-              <span>{workflow.actions.length} steps</span>
+              <span>{(workflow?.actions?.length || 0)} steps</span>
               <span>•</span>
-              <span>Created {new Date(workflow.createdAt).toLocaleDateString()}</span>
+              <span>Created {workflow?.createdAt ? new Date(workflow.createdAt).toLocaleDateString() : 'Unknown date'}</span>
             </div>
           </div>
         )
@@ -328,10 +329,10 @@ export default function Automation() {
           <div className="space-y-1 text-sm">
             <div className="flex items-center space-x-2">
               <span className="text-muted-foreground">Success:</span>
-              <span className="font-medium">{stats.successRate}%</span>
+              <span className="font-medium">{stats?.successRate}%</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              {stats.emailsSent.toLocaleString()} emails sent
+              {stats?.emailsSent?.toLocaleString()} emails sent
             </div>
           </div>
         )
@@ -448,21 +449,21 @@ export default function Automation() {
 
   // Calculate real stats from executions
   const calculateStats = (workflow: AutomationWorkflow) => {
-    const workflowExecutions = executions.filter(exec => exec.automationId === workflow.id)
+    const workflowExecutions = executions?.filter(exec => exec.automationId === workflow.id)
     const totalExecutions = workflowExecutions.length
-    const completedExecutions = workflowExecutions.filter(exec => exec.status === 'COMPLETED').length
+    const completedExecutions = workflowExecutions?.filter(exec => exec.status === 'COMPLETED').length
     const successRate = totalExecutions > 0 ? Math.round((completedExecutions / totalExecutions) * 100) : 0
-    const emailsSent = workflowExecutions.reduce((total, exec) => total + (exec.result?.emailsSent || 0), 0)
+    const emailsSent = workflowExecutions?.reduce((total, exec) => total + (exec.result?.emailsSent || 0), 0)
 
     return { totalExecutions, successRate, emailsSent }
   }
 
   const totalStats = {
-    activeWorkflows: (automations as any)?.automations.filter((a: { isActive: any }) => a.isActive).length,
-    totalWorkflows: automations.length,
-    totalEmailsSent: (automations as any)?.automations.reduce((total:any, workflow:any) => total + (workflow?.stats?.emailsSent || 0), 0),
-    avgSuccessRate: (automations as any)?.automations.length > 0 
-      ? Math.round((automations as any)?.automations.reduce((total:any, workflow:any) => total + (workflow?.stats?.successRate || 0), 0) / automations.length)
+    activeWorkflows: (automations as any)?.automations?.filter?.((a: { isActive: any }) => a?.isActive)?.length || 0,
+    totalWorkflows: automations?.length || 0,
+    totalEmailsSent: (automations as any)?.automations?.reduce?.((total:any, workflow:any) => total + (workflow?.stats?.emailsSent || 0), 0) || 0,
+    avgSuccessRate: (automations as any)?.automations?.length > 0 
+      ? Math.round((automations as any)?.automations?.reduce?.((total:any, workflow:any) => total + (workflow?.stats?.successRate || 0), 0) / (automations as any)?.automations?.length)
       : 0,
   }
 
@@ -789,7 +790,7 @@ export default function Automation() {
               <CardContent>
                 <DataTable
                   columns={executionColumns}
-                  data={executions.filter(exec => exec.automationId === currentAutomation.id)}
+                  data={executions?.filter(exec => exec.automationId === currentAutomation.id)}
                   // emptyMessage="No executions found for this workflow"
                 />
               </CardContent>

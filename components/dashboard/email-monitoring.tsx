@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { EnhancedModal } from "@/components/ui/enhanced-modal"
-import { useModal, useProgress } from "@/components/ui/modal-manager"
+// import { useModal, useProgress } from "@/components/ui/modal-manager"
 import {  toast } from 'react-toastify';
 import {
   Activity,
@@ -101,8 +101,8 @@ export function EmailMonitoring() {
     throttleRate: 100,
   })
 
-  const { openModal } = useModal()
-  const createProgress = useProgress()
+  // const { openModal } = useModal()
+  // const createProgress = useProgress()
 
   // Fetch metrics data
   const { data: metrics } = useMonitoringMetrics()
@@ -123,6 +123,31 @@ export function EmailMonitoring() {
       setJobs(fetchedJobs)
     }
   }, [fetchedJobs])
+
+
+
+   const simulateProgress = () => {
+    return {
+      start: (title: string, description: string) => {
+        console.log(`Progress started: ${title} - ${description}`)
+        return 'progress-id'
+      },
+      update: (progress: number, description: string) => {
+        console.log(`Progress: ${progress}% - ${description}`)
+      },
+      complete: (message: string) => {
+        console.log(`Progress completed: ${message}`)
+        toast(message)
+      },
+      error: (message: string) => {
+        console.error(`Progress error: ${message}`)
+        toast.error(message)
+      }
+    }
+  }
+
+  const createProgress = simulateProgress
+
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -224,7 +249,7 @@ export function EmailMonitoring() {
       setJobs((prev) => [newJob, ...prev])
       setIsImportModalOpen(false)
       setCsvFile(null)
-    } catch (error) {
+    }catch (error) {
       progress.error("Import failed. Please try again.")
     }
   }
@@ -249,7 +274,7 @@ export function EmailMonitoring() {
     )
   }
 
-  const filteredJobs = jobs.filter((job) => {
+  const filteredJobs = jobs?.filter((job) => {
     const matchesSearch = job.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = filterStatus === "all" || job.status === filterStatus
     const matchesType = filterType === "all" || job.type === filterType
@@ -400,7 +425,7 @@ export function EmailMonitoring() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredJobs.map((job) => (
+                {filteredJobs?.map((job) => (
                   <TableRow key={job.id}>
                     <TableCell className="font-medium">{job.name}</TableCell>
                     <TableCell>

@@ -686,15 +686,16 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
 
   console.log(templates as any , '==============TEMPLATE===============')
 
-  const filteredTemplates = (templates as any)?.templates.filter((template: EmailTemplate) => {
-    const matchesCategory = selectedCategory === "all" || template.category === selectedCategory
+  const filteredTemplates = (templates as any)?.templates?.filter?.((template: EmailTemplate) => {
+    const matchesCategory = selectedCategory === "all" || template?.category === selectedCategory
     const matchesSearch =
       searchQuery === "" ||
-      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      template?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template?.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template?.tags?.some?.((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
     return matchesCategory && matchesSearch
-  })
+  }) || []
+
 
   const handleSelectTemplate = (template: EmailTemplate) => {
     onSelectTemplate?.(template)
@@ -713,10 +714,11 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
     setPreviewTemplate(template)
   }
 
-  const getCategoryCount = (categoryId: string) => {
-    if (categoryId === "all") return templates.length
-    return (templates as any).templates.filter((template: any) => template.category === categoryId).length
+const getCategoryCount = (categoryId: string) => {
+    if (categoryId === "all") return (templates as any)?.templates?.length || 0
+    return (templates as any)?.templates?.filter?.((template: any) => template?.category === categoryId)?.length || 0
   }
+
 
   const getCategoryIcon = (categoryId: string) => {
     const category = defaultCategories.find(cat => cat.id === categoryId)
@@ -730,9 +732,9 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div className="flex-1">
             <h1 className="text-2xl font-semibold text-foreground">Email Templates</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Choose from {templates.length} professionally designed templates
-            </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Choose from {(templates as any)?.templates?.length || 0} professionally designed templates
+              </p>
           </div>
           <Button
             onClick={() => setCreateDialogOpen(true)}
@@ -816,39 +818,36 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
               )}
 
               {/* Templates Grid */}
-              {!isLoading && filteredTemplates.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-96 text-center p-8">
-                  <Mail className="h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">
-                    {templates.length === 0 ? "No templates created yet" : "No templates found"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground max-w-md mb-4">
-                    {templates.length === 0 
-                      ? "Get started by creating your first email template."
-                      : "Try adjusting your search or filter criteria to find what you're looking for."}
-                  </p>
-                  {templates.length === 0 && (
-                    <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Create Your First Template
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-                  {filteredTemplates.map((template:any) => {
-                    const CategoryIcon = getCategoryIcon(String(template.category))
-                    return (
-                      <Card
-                        key={template.id}
-                        className="group overflow-hidden border-border hover:border-primary transition-all duration-300 hover:shadow-lg hover:shadow-primary/10"
-                      >
-                        {/* Thumbnail */}
-                        <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/10 to-muted">
-                          <div className="w-full h-full flex items-center justify-center">
-                            <CategoryIcon className="h-12 w-12 text-primary/50" />
-                          </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {!isLoading && filteredTemplates.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-96 text-center p-8">
+                    <Mail className="h-16 w-16 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      {(templates as any)?.templates?.length === 0 ? "No templates created yet" : "No templates found"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-md mb-4">
+                      {(templates as any)?.templates?.length === 0 
+                        ? "Get started by creating your first email template."
+                        : "Try adjusting your search or filter criteria to find what you're looking for."}
+                    </p>
+                    {(templates as any)?.templates?.length === 0 && (
+                      <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create Your First Template
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+                    {filteredTemplates.map((template: any) => {
+                      const CategoryIcon = getCategoryIcon(String(template?.category))
+                      return (
+                        <Card key={template?.id} className="group overflow-hidden border-border hover:border-primary transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+                          {/* Thumbnail */}
+                          <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/10 to-muted">
+                            <div className="w-full h-full flex items-center justify-center">
+                              <CategoryIcon className="h-12 w-12 text-primary/50" />
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                           {/* Overlay Actions */}
                           <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -916,33 +915,33 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
                         </div>
 
                         {/* Content */}
-                        <CardContent className="p-4 space-y-3">
-                          <div>
-                            <CardTitle className="text-base mb-1 line-clamp-1">{template.name}</CardTitle>
-                            <CardDescription className="line-clamp-2">{template.description}</CardDescription>
-                          </div>
+                          <CardContent className="p-4 space-y-3">
+                              <div>
+                                <CardTitle className="text-base mb-1 line-clamp-1">{template?.name || 'Unnamed Template'}</CardTitle>
+                                <CardDescription className="line-clamp-2">{template?.description || 'No description'}</CardDescription>
+                              </div>
 
                           {/* Tags */}
-                          <div className="flex flex-wrap gap-1">
-                            {template.tags.slice(0, 3).map((tag: boolean | Key | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<AwaitedReactNode> | null | undefined) => (
-                              <Badge key={Math.random()} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                            {template.tags.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{template.tags.length - 3}
-                              </Badge>
-                            )}
-                          </div>
+                            <div className="flex flex-wrap gap-1">
+                              {template?.tags?.slice?.(0, 3)?.map((tag: any) => (
+                                <Badge key={Math.random()} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              )) || []}
+                              {template?.tags?.length > 3 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{(template.tags.length - 3)}
+                                </Badge>
+                              )}
+                            </div>
 
-                          <Separator className="bg-border" />
+                            <Separator className="bg-border" />
 
                           {/* Footer */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Users className="h-3 w-3" />
-                              <span>{template.usageCount?.toLocaleString() || 0} uses</span>
+                              <span>{(template?.usageCount || 0)?.toLocaleString()} uses</span>
                             </div>
                             <Button
                               variant="ghost"
@@ -950,7 +949,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
                               onClick={() => handleCopyTemplate(template as any)}
                               className="h-7 gap-1 text-xs"
                             >
-                              {copiedId === template.id ? (
+                              {copiedId === template?.id ? (
                                 <>
                                   <Check className="h-3 w-3 text-green-500" />
                                   Copied
@@ -1060,7 +1059,7 @@ export function EmailTemplates({ onSelectTemplate }: EmailTemplatesProps) {
                       className="cursor-pointer"
                       onClick={() => {
                         const updatedTags = newTemplate.tags.includes(tag)
-                          ? newTemplate.tags.filter(t => t !== tag)
+                          ? newTemplate?.tags?.filter(t => t !== tag)
                           : [...newTemplate.tags, tag]
                         setNewTemplate({ ...newTemplate, tags: updatedTags })
                       }}
