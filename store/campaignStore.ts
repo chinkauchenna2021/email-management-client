@@ -44,6 +44,25 @@ export const useCampaignStore = create<CampaignState>()(
         }
       },
 
+      // createCampaign: async (campaignData: CreateCampaignData) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const campaign = await CampaignService.createCampaign(campaignData);
+      //     set((state) => ({
+      //       campaigns: [campaign, ...state.campaigns],
+      //       isLoading: false,
+      //     }));
+      //     return campaign;
+      //   } catch (error: any) {
+      //     set({ 
+      //       error: error.response?.data?.message || error.message, 
+      //       isLoading: false 
+      //     });
+      //     throw error;
+      //   }
+      // },
+
+// In your campaign store
       createCampaign: async (campaignData: CreateCampaignData) => {
         set({ isLoading: true, error: null });
         try {
@@ -54,13 +73,17 @@ export const useCampaignStore = create<CampaignState>()(
           }));
           return campaign;
         } catch (error: any) {
+          const errorMessage = error.response?.data?.message || error.message || 'Failed to create campaign';
           set({ 
-            error: error.response?.data?.message || error.message, 
+            error: errorMessage, 
             isLoading: false 
           });
-          throw error;
+          throw new Error(errorMessage);
         }
       },
+
+
+
 
       updateCampaign: async (campaignId: string, updates: Partial<Campaign>) => {
         set({ isLoading: true, error: null });

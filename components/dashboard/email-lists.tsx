@@ -582,7 +582,7 @@ const EnhancedValidationDisplay = () => {
       </div>
 
       {/* Quick Actions Footer */}
-      <div className="flex items-center justify-between p-4  rounded-xl border mr-4">
+      <div className="flex items-center justify-between p-4  rounded-xl border mr-1">
         <div className="flex items-center gap-2 text-sm text-gray-700">
           {pendingCount > 0 ? (
             <>
@@ -643,25 +643,6 @@ const EnhancedValidationDisplay = () => {
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

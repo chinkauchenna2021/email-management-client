@@ -140,6 +140,7 @@ export function Domains() {
     password: "",
     dailyLimit: 1000,
     enableWarmup: true,
+    fromEmail: "",
   });
 
   const {
@@ -181,6 +182,7 @@ export function Domains() {
       password: "",
       dailyLimit: 1000,
       enableWarmup: true,
+      fromEmail: "",
     });
   };
 
@@ -369,7 +371,25 @@ useEffect(() => {
     }
   };
 
-  const handleConfigureDomain = (domain: any) => {
+  // const handleConfigureDomain = (domain: any) => {
+  //   setSelectedDomain(domain);
+  //   setSmtpForm({
+  //     provider: getDomainProperty(domain, "smtpProvider", "custom"),
+  //     host: getDomainProperty(domain, "smtpHost", ""),
+  //     port: Number(getDomainProperty(domain, "smtpPort", 587)),
+  //     security: getDomainProperty(domain, "smtpSecurity", "STARTTLS"),
+  //     username: getDomainProperty(domain, "smtpUsername", ""),
+  //     password: getDomainProperty(domain, "smtpPassword", ""),
+  //     dailyLimit: Number(getDomainProperty(domain, "dailyLimit", 1000)),
+  //     enableWarmup: Boolean(
+  //       getDomainProperty(domain, "enableDomainWarmup", false)
+  //     ),
+  //   });
+  //   setIsConfigDialogOpen(true);
+  // };
+
+
+   const handleConfigureDomain = (domain: any) => {
     setSelectedDomain(domain);
     setSmtpForm({
       provider: getDomainProperty(domain, "smtpProvider", "custom"),
@@ -379,9 +399,8 @@ useEffect(() => {
       username: getDomainProperty(domain, "smtpUsername", ""),
       password: getDomainProperty(domain, "smtpPassword", ""),
       dailyLimit: Number(getDomainProperty(domain, "dailyLimit", 1000)),
-      enableWarmup: Boolean(
-        getDomainProperty(domain, "enableDomainWarmup", false)
-      ),
+      enableWarmup: Boolean(getDomainProperty(domain, "enableDomainWarmup", false)),
+      fromEmail: getDomainProperty(domain, "fromEmail", ""), // ADD THIS
     });
     setIsConfigDialogOpen(true);
   };
@@ -419,19 +438,38 @@ useEffect(() => {
     );
   };
 
-  const handleProviderChange = (provider: string) => {
+  // const handleProviderChange = (provider: string) => {
+  //   const providerConfig = smtpProviders.find((p) => p.value === provider);
+  //   if (providerConfig) {
+  //     setSmtpForm((prev) => ({
+  //       ...prev,
+  //       provider,
+  //       host: providerConfig.host,
+  //       port: providerConfig.port,
+  //     }));
+  //   }
+  // };
+
+  // Step navigation handlers
+  
+    const handleProviderChange = (provider: string) => {
     const providerConfig = smtpProviders.find((p) => p.value === provider);
     if (providerConfig) {
+      const defaultFromEmail = provider === 'custom' 
+        ? `noreply@${newDomain || (selectedDomain?.domain || '')}`
+        : smtpForm.fromEmail;
+      
       setSmtpForm((prev) => ({
         ...prev,
         provider,
         host: providerConfig.host,
         port: providerConfig.port,
+        fromEmail: defaultFromEmail,
       }));
     }
   };
 
-  // Step navigation handlers
+  
   const handleNextStep = () => {
     if (currentStep === 1 && !newDomain) {
       toast("Please enter a domain name");
@@ -578,10 +616,37 @@ useEffect(() => {
               </div>
             )}
 
+
+
+
+
+
+
             {/* Step 2: SMTP Configuration */}
             {currentStep === 2 && (
               <div className="space-y-6  ">
                 <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fromEmail" className="flex items-center">
+                        From Email Address <span className="text-red-500 ml-1">*</span>
+                      </Label>
+                      <Input
+                        id="fromEmail"
+                        type="email"
+                        placeholder={`noreply@${newDomain}`}
+                        value={smtpForm.fromEmail}
+                        onChange={(e) =>
+                          setSmtpForm((prev) => ({
+                            ...prev,
+                            fromEmail: e.target.value,
+                          }))
+                        }
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        This email will appear as the sender for all campaigns using this domain.
+                        {smtpForm.provider === 'custom' && ' Must be a valid email address from this domain.'}
+                      </p>
+                    </div>
                   <div className="space-y-2">
                     <Label>SMTP Provider</Label>
                     <Select
@@ -1232,6 +1297,29 @@ useEffect(() => {
 
             <TabsContent value="smtp" className="space-y-4">
               <div className="space-y-4">
+                {/* ADD FROM EMAIL FIELD */}
+                  <div className="space-y-2">
+                    <Label htmlFor="fromEmail" className="flex items-center">
+                      From Email Address <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="fromEmail"
+                      type="email"
+                      placeholder={`noreply@${selectedDomain?.domain}`}
+                      value={smtpForm.fromEmail}
+                      onChange={(e) =>
+                        setSmtpForm((prev) => ({
+                          ...prev,
+                          fromEmail: e.target.value,
+                        }))
+                      }
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      This email will appear as the sender for all campaigns using this domain.
+                      {smtpForm.provider === 'custom' && ' Must be a valid email address from this domain.'}
+                    </p>
+                  </div>
+
                 <div className="space-y-2">
                   <Label>SMTP Provider</Label>
                   <Select

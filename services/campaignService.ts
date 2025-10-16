@@ -50,11 +50,28 @@ export const CampaignService = {
   // },
 
 
- async createCampaign(campaignData: CreateCampaignData) {
+//  async createCampaign(campaignData: CreateCampaignData) {
+//     // The name will be auto-generated on the backend from the subject
+//     const payload = {
+//       ...campaignData,
+//       content: campaignData.content || '<p>Your email content here</p>'
+//     };
+    
+//     const response = await api.post('/campaigns', payload);
+//     return response.data.campaign;
+//   },
+
+
+  async createCampaign(campaignData: CreateCampaignData) {
     // The name will be auto-generated on the backend from the subject
     const payload = {
-      ...campaignData,
-      content: campaignData.content || '<p>Your email content here</p>'
+      subject: campaignData.subject,
+      content: campaignData.content || '<p>Your email content here</p>',
+      domainId: campaignData.domainId,
+      listId: campaignData.listId,
+      templateId: campaignData.templateId,
+      scheduledAt: campaignData.scheduledAt,
+      saveAsDraft: campaignData.status === 'DRAFT' || !campaignData.scheduledAt
     };
     
     const response = await api.post('/campaigns', payload);
