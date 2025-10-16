@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, AlertTriangle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Clock, RefreshCw } from "lucide-react";
 import { EmailValidationResult } from "@/lib/email/types";
 
 interface ValidationBadgeProps {
@@ -8,74 +8,75 @@ interface ValidationBadgeProps {
   className?: string;
 }
 
+
 export function ValidationBadge({ result, isLoading, className }: ValidationBadgeProps) {
   if (isLoading) {
     return (
-      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+      <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
         <Clock className="w-3 h-3 mr-1 animate-pulse" />
         Validating...
       </Badge>
-    );
+    )
   }
 
   if (!result) {
-    return null;
+    return null
   }
 
-  const { isValid, qualityScore, riskLevel } = result;
+  const { isValid, qualityScore, riskLevel } = result
 
   if (!isValid) {
     return (
-      <Badge variant="destructive" className="bg-red-50 text-red-700 border-red-200">
+      <Badge variant="outline" className="bg-red-500/20 text-red-300 border-red-500/30">
         <XCircle className="w-3 h-3 mr-1" />
         Invalid
       </Badge>
-    );
+    )
   }
 
   const getVariant = () => {
     switch (riskLevel) {
       case 'high':
-        return "bg-red-50 text-red-700 border-red-200";
+        return 'bg-red-500/20 text-red-300 border-red-500/30'
       case 'medium':
-        return "bg-yellow-50 text-yellow-700 border-yellow-200";
+        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
       case 'low':
-        return "bg-green-50 text-green-700 border-green-200";
+        return 'bg-green-500/20 text-green-300 border-green-500/30'
       default:
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return 'bg-zinc-700 text-zinc-300 border-zinc-600'
     }
-  };
+  }
 
   const getIcon = () => {
     switch (riskLevel) {
       case 'high':
-        return <AlertTriangle className="w-3 h-3 mr-1" />;
+        return <AlertTriangle className="w-3 h-3 mr-1" />
       case 'medium':
-        return <AlertTriangle className="w-3 h-3 mr-1" />;
+        return <AlertTriangle className="w-3 h-3 mr-1" />
       case 'low':
-        return <CheckCircle className="w-3 h-3 mr-1" />;
+        return <CheckCircle className="w-3 h-3 mr-1" />
       default:
-        return <CheckCircle className="w-3 h-3 mr-1" />;
+        return <CheckCircle className="w-3 h-3 mr-1" />
     }
-  };
+  }
 
   const getText = () => {
     switch (riskLevel) {
       case 'high':
-        return `High Risk (${qualityScore}%)`;
+        return `High Risk (${qualityScore}%)`
       case 'medium':
-        return `Medium Risk (${qualityScore}%)`;
+        return `Medium Risk (${qualityScore}%)`
       case 'low':
-        return `Valid (${qualityScore}%)`;
+        return `Valid (${qualityScore}%)`
       default:
-        return `Valid (${qualityScore}%)`;
+        return `Valid (${qualityScore}%)`
     }
-  };
+  }
 
   return (
     <Badge variant="outline" className={`${getVariant()} ${className}`}>
       {getIcon()}
       {getText()}
     </Badge>
-  );
+  )
 }

@@ -259,11 +259,11 @@ const handleAddDomain = async () => {
 
 
 // In the Domains component, after handleAddDomain call
-if (isLoading) {
+if (isLoading && domains?.length === 0) {
   return (
     <div className="flex items-center justify-center p-8">
       <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-      Adding domain...
+      Loading domains...
     </div>
   );
 }
@@ -748,7 +748,14 @@ useEffect(() => {
                     Back
                   </Button>
                   <Button onClick={handleAddDomain} disabled={isLoading}>
-                    Create Domain
+                     {isLoading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Domain'
+                    )}
                   </Button>
                 </div>
               </div>
@@ -958,7 +965,7 @@ useEffect(() => {
       </Card>
 
       {/* Settings Dialog for Existing Domains (unchanged) */}
-      <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
+      {/* <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>SMTP Configuration</DialogTitle>
@@ -1193,7 +1200,7 @@ useEffect(() => {
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
 
 

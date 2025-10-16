@@ -172,6 +172,244 @@ const handleEmailInput = async (value: string) => {
 };
 
 // Enhanced validation display component
+// const EnhancedValidationDisplay = () => {
+//   const emails = bulkEmails
+//     .split(/[,\s\n]+/)
+//     .filter((email) => email.trim() !== '');
+
+//   if (emails.length === 0) {
+//     return null;
+//   }
+
+//   const validCount = emails.filter(email => 
+//     validationResults[email]?.isValid
+//   ).length;
+  
+//   const invalidCount = emails.filter(email => 
+//     validationResults[email] && !validationResults[email]?.isValid
+//   ).length;
+  
+//   const pendingCount = emails.filter(email => 
+//     validationLoading.has(email) || !validationResults[email]
+//   ).length;
+
+//   const [viewMode, setViewMode] = useState<'all' | 'valid' | 'invalid'>('all');
+//   const [searchTerm, setSearchTerm] = useState('');
+
+//   // Filter emails based on view mode and search
+//   const filteredEmails = emails.filter(email => {
+//     const matchesSearch = email.toLowerCase().includes(searchTerm.toLowerCase());
+//     const result = validationResults[email];
+    
+//     if (!matchesSearch) return false;
+    
+//     switch (viewMode) {
+//       case 'valid':
+//         return result?.isValid;
+//       case 'invalid':
+//         return result && !result?.isValid;
+//       default:
+//         return true;
+//     }
+//   });
+
+//   return (
+//     <div className="space-y-4">
+//       {/* Header with Stats and Controls */}
+//       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+//         <div className="flex items-center justify-between mb-4">
+//           <div>
+//             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+//               <CheckCircle className="w-5 h-5 text-green-600" />
+//               Email Validation Results
+//             </h3>
+//             <p className="text-sm text-gray-600 mt-1">
+//               {emails.length} email{emails.length !== 1 ? 's' : ''} processed
+//             </p>
+//           </div>
+          
+//           {/* View Mode Toggle */}
+//           <div className="flex items-center gap-2 bg-white rounded-lg p-1 border">
+//             <Button
+//               variant={viewMode === 'all' ? 'default' : 'ghost'}
+//               size="sm"
+//               onClick={() => setViewMode('all')}
+//               className={`text-xs ${viewMode === 'all' ? 'shadow-sm' : ''}`}
+//             >
+//               All ({emails.length})
+//             </Button>
+//             <Button
+//               variant={viewMode === 'valid' ? 'default' : 'ghost'}
+//               size="sm"
+//               onClick={() => setViewMode('valid')}
+//               className={`text-xs ${viewMode === 'valid' ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
+//             >
+//               Valid ({validCount})
+//             </Button>
+//             <Button
+//               variant={viewMode === 'invalid' ? 'default' : 'ghost'}
+//               size="sm"
+//               onClick={() => setViewMode('invalid')}
+//               className={`text-xs ${viewMode === 'invalid' ? 'bg-red-50 text-red-700 border-red-200' : ''}`}
+//             >
+//               Invalid ({invalidCount})
+//             </Button>
+//           </div>
+//         </div>
+
+//         {/* Progress Bar */}
+//         <div className="space-y-2">
+//           <div className="flex justify-between text-xs text-gray-600">
+//             <span>Validation Progress</span>
+//             <span>{emails.length - pendingCount}/{emails.length}</span>
+//           </div>
+//           <div className="w-full bg-gray-200 rounded-full h-2">
+//             <div 
+//               className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+//               style={{ 
+//                 width: `${((emails.length - pendingCount) / emails.length) * 100}%` 
+//               }}
+//             />
+//           </div>
+//         </div>
+
+//         {/* Stats Cards */}
+//         <div className="grid grid-cols-3 gap-3 mt-4">
+//           <div className={`text-center p-3 rounded-lg border transition-all ${
+//             pendingCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+//           }`}>
+//             <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
+//             <div className="text-xs text-yellow-700">Pending</div>
+//           </div>
+//           <div className="text-center p-3 rounded-lg bg-green-50 border border-green-200">
+//             <div className="text-2xl font-bold text-green-600">{validCount}</div>
+//             <div className="text-xs text-green-700">Valid</div>
+//           </div>
+//           <div className="text-center p-3 rounded-lg bg-red-50 border border-red-200">
+//             <div className="text-2xl font-bold text-red-600">{invalidCount}</div>
+//             <div className="text-xs text-red-700">Invalid</div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Search and Filter Bar */}
+//       <div className="flex items-center gap-3">
+//         <div className="flex-1 relative">
+//           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+//           <Input
+//             placeholder="Search emails..."
+//             value={searchTerm}
+//             onChange={(e) => setSearchTerm(e.target.value)}
+//             className="pl-9 pr-4"
+//           />
+//         </div>
+//         <div className="text-sm text-gray-500">
+//           {filteredEmails.length} of {emails.length} shown
+//         </div>
+//       </div>
+
+//       {/* Email List */}
+//       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+//         <div className="max-h-80 overflow-y-auto">
+//           {filteredEmails.length === 0 ? (
+//             <div className="text-center py-12 text-gray-500">
+//               <Search className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+//               <p className="font-medium">No emails found</p>
+//               <p className="text-sm mt-1">
+//                 {searchTerm ? 'Try adjusting your search or filter' : 'All emails are filtered out'}
+//               </p>
+//             </div>
+//           ) : (
+//             <div className="divide-y divide-gray-100">
+//               {filteredEmails.map((email, index) => (
+//                 <EmailValidationItem
+//                   key={`${email}-${index}`}
+//                   email={email}
+//                   result={validationResults[email]}
+//                   isLoading={validationLoading.has(email)}
+//                   onRemove={(emailToRemove) => {
+//                     const newEmails = emails.filter(e => e !== emailToRemove);
+//                     setBulkEmails(newEmails.join('\n'));
+//                     clearValidation(emailToRemove);
+//                   }}
+//                 />
+//               ))}
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Quick Actions Footer */}
+//       <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
+//         <div className="flex items-center gap-2 text-sm text-gray-700">
+//           {pendingCount > 0 ? (
+//             <>
+//               <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+//               <span>Validating {pendingCount} email{pendingCount !== 1 ? 's' : ''}...</span>
+//             </>
+//           ) : (
+//             <>
+//               <CheckCircle className="w-4 h-4 text-green-600" />
+//               <span>All emails validated successfully</span>
+//             </>
+//           )}
+//         </div>
+        
+//         <div className="flex items-center gap-2">
+//           <Button
+//             variant="outline"
+//             size="sm"
+//             onClick={() => validateBatch(emails)}
+//             disabled={pendingCount === 0}
+//             className="gap-2"
+//           >
+//             <RefreshCw className="w-4 h-4" />
+//             Re-validate All
+//           </Button>
+//           <Button
+//             variant="outline"
+//             size="sm"
+//             onClick={() => {
+//               setBulkEmails('');
+//               clearValidation();
+//             }}
+//             className="gap-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+//           >
+//             <Trash2 className="w-4 h-4" />
+//             Clear All
+//           </Button>
+          
+//           {validCount > 0 && (
+//             <Button
+//               size="sm"
+//               onClick={() => {
+//                 // Export valid emails functionality
+//                 const validEmails = emails.filter(email => 
+//                   validationResults[email]?.isValid
+//                 );
+//                 // Implement export logic here
+//                 console.log('Exporting valid emails:', validEmails);
+//               }}
+//               className="gap-2 bg-green-600 hover:bg-green-700"
+//             >
+//               <Download className="w-4 h-4" />
+//               Export Valid ({validCount})
+//             </Button>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+
+
+
+
+
+
+
+
 const EnhancedValidationDisplay = () => {
   const emails = bulkEmails
     .split(/[,\s\n]+/)
@@ -193,70 +431,218 @@ const EnhancedValidationDisplay = () => {
     validationLoading.has(email) || !validationResults[email]
   ).length;
 
+  const [viewMode, setViewMode] = useState<'all' | 'valid' | 'invalid'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filter emails based on view mode and search
+  const filteredEmails = emails.filter(email => {
+    const matchesSearch = email.toLowerCase().includes(searchTerm.toLowerCase());
+    const result = validationResults[email];
+    
+    if (!matchesSearch) return false;
+    
+    switch (viewMode) {
+      case 'valid':
+        return result?.isValid;
+      case 'invalid':
+        return result && !result?.isValid;
+      default:
+        return true;
+    }
+  });
+
   return (
+
     <div className="space-y-4">
-      {/* Validation Stats */}
-      <ValidationStats 
-        total={emails.length}
-        valid={validCount}
-        invalid={invalidCount}
-        pending={pendingCount}
-      />
 
-      {/* Email List with Validation */}
-      <div className="space-y-3 max-h-96 overflow-y-auto">
-        {emails.map((email, index) => (
-          <EmailValidationItem
-            key={`${email}-${index}`}
-            email={email}
-            result={validationResults[email]}
-            isLoading={validationLoading.has(email)}
-            onRemove={(emailToRemove) => {
-              // Remove from textarea
-              const newEmails = emails.filter(e => e !== emailToRemove);
-              setBulkEmails(newEmails.join('\n'));
-              clearValidation(emailToRemove);
-            }}
-          />
-        ))}
-      </div>
 
-      {/* Quick Actions */}
-      {emails.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="text-sm text-blue-700">
-            {pendingCount > 0 
-              ? `Validating ${pendingCount} emails...` 
-              : 'All emails validated'
-            }
+
+      {/* Header with Stats and Controls */}
+      <div className=" from-blue-50 to-indigo-50 rounded-xl p-4  border mr-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 text-white">
+              <CheckCircle className="w-5 h-5 " />
+              Email Validation Results
+            </h3>
+            <p className="text-sm text-slate-400 mt-1">
+              {emails.length} email{emails.length !== 1 ? 's' : ''} processed
+            </p>
           </div>
-          <div className="flex items-center space-x-2">
+          
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2  p-1 border">
             <Button
-              variant="outline"
+              variant={viewMode === 'all' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => validateBatch(emails)}
-              disabled={pendingCount === 0}
+              onClick={() => setViewMode('all')}
+              className={`text-xs ${viewMode === 'all' ? 'shadow-sm' : ''}`}
             >
-              Re-validate All
+              All ({emails.length})
             </Button>
             <Button
-              variant="outline"
+              variant={viewMode === 'valid' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => {
-                setBulkEmails('');
-                clearValidation();
-              }}
+              onClick={() => setViewMode('valid')}
+              className={`text-xs ${viewMode === 'valid' ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
             >
-              Clear All
+              Valid ({validCount})
+            </Button>
+            <Button
+              variant={viewMode === 'invalid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('invalid')}
+              className={`text-xs ${viewMode === 'invalid' ? 'bg-red-50 text-red-700 border-red-200' : ''}`}
+            >
+              Invalid ({invalidCount})
             </Button>
           </div>
         </div>
-      )}
+
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs text-slate-400">
+            <span>Validation Progress</span>
+            <span>{emails.length - pendingCount}/{emails.length}</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+              style={{ 
+                width: `${((emails.length - pendingCount) / emails.length) * 100}%` 
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <div className={`text-center p-3 rounded-lg border transition-all ${
+            pendingCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
+            <div className="text-xs text-yellow-700">Pending</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-green-50 border border-green-200">
+            <div className="text-2xl font-bold text-green-600">{validCount}</div>
+            <div className="text-xs text-green-700">Valid</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-red-50 border border-red-200">
+            <div className="text-2xl font-bold text-red-600">{invalidCount}</div>
+            <div className="text-xs text-red-700">Invalid</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="flex items-center gap-3 pr-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search emails..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4"
+          />
+        </div>
+        <div className="text-sm text-gray-500">
+          {filteredEmails.length} of {emails.length} shown
+        </div>
+      </div>
+
+      {/* Email List */}
+      <div className=" overflow-hidden pr-4">
+        <div className="max-h-80 overflow-y-auto">
+          {filteredEmails.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Search className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="font-medium">No emails found</p>
+              <p className="text-sm mt-1">
+                {searchTerm ? 'Try adjusting your search or filter' : 'All emails are filtered out'}
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100 ">
+              {filteredEmails.map((email, index) => (
+                <EmailValidationItem
+                  key={`${email}-${index}`}
+                  email={email}
+                  result={validationResults[email]}
+                  isLoading={validationLoading.has(email)}
+                  onRemove={(emailToRemove:any) => {
+                    const newEmails = emails.filter(e => e !== emailToRemove);
+                    setBulkEmails(newEmails.join('\n'));
+                    clearValidation(emailToRemove);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Actions Footer */}
+      <div className="flex items-center justify-between p-4  rounded-xl border mr-4">
+        <div className="flex items-center gap-2 text-sm text-gray-700">
+          {pendingCount > 0 ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+              <span>Validating {pendingCount} email{pendingCount !== 1 ? 's' : ''}...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span>All emails validated successfully</span>
+            </>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => validateBatch(emails)}
+            disabled={pendingCount === 0}
+            className="gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Re-validate All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setBulkEmails('');
+              clearValidation();
+            }}
+            className="gap-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+          >
+            <Trash2 className="w-4 h-4" />
+            Clear All
+          </Button>
+          
+          {validCount > 0 && (
+            <Button
+              size="sm"
+              onClick={() => {
+                // Export valid emails functionality
+                const validEmails = emails.filter(email => 
+                  validationResults[email]?.isValid
+                );
+                // Implement export logic here
+                console.log('Exporting valid emails:', validEmails);
+              }}
+              className="gap-2 bg-green-600 hover:bg-green-700"
+            >
+              <Download className="w-4 h-4" />
+              Export Valid ({validCount})
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
-
-
 
 
 
@@ -843,6 +1229,8 @@ const handleEditEmailList = async (list: EmailList) => {
                 </div>
               ) : (
                 // Step 2: Upload Emails
+                <div className=" overflow-hidden px-auto pr-2">
+                <div className="max-h-100 overflow-y-auto ">
                 <div className="space-y-4">
                   <Tabs defaultValue="paste" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
@@ -1105,6 +1493,7 @@ const handleEditEmailList = async (list: EmailList) => {
                       )}
                     </TabsContent>
                   </Tabs>
+                   
 
                   {isValidating && (
                     <div className="space-y-2">
@@ -1115,6 +1504,8 @@ const handleEditEmailList = async (list: EmailList) => {
                       <Progress value={validationProgress} className="h-2" />
                     </div>
                   )}
+                </div>
+                </div>
                 </div>
               )}
 
