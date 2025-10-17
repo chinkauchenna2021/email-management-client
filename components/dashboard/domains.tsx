@@ -500,7 +500,7 @@ useEffect(() => {
         )
       : 0;
 
-  if (isLoading && domainsArray.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <RefreshCw className="w-6 h-6 animate-spin mr-2" />
