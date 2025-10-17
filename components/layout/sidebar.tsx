@@ -20,7 +20,7 @@ import Link from "next/link"
 
 const NAV_ITEMS = [
   { name: "Overview", href: "/overview", icon: Home },
-  { name: "Domains", href: "/domain", icon: Globe },
+  { name: "Domains", href: "/domain-manager", icon: Globe },
   { name: "Email Lists", href: "/email-list", icon: Users },
   { name: "Campaigns", href: "/campaign", icon: Send },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },

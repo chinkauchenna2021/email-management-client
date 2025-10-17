@@ -261,14 +261,14 @@ const handleAddDomain = async () => {
 
 
 // In the Domains component, after handleAddDomain call
-if (isLoading && domains?.length === 0) {
-  return (
-    <div className="flex items-center justify-center p-8">
-      <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-      Loading domains...
-    </div>
-  );
-}
+// if (isLoading && domains?.length === 0) {
+//   return (
+//     <div className="flex items-center justify-center p-8">
+//       <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+//       Loading domains...
+//     </div>
+//   );
+// }
 
 
   const handleUpdateDomain = async () => {
