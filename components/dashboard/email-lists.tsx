@@ -621,7 +621,7 @@ const EnhancedValidationDisplay = () => {
             Clear All
           </Button>
           
-          {validCount > 0 && (
+          {/* {validCount > 0 && (
             <Button
               size="sm"
               onClick={() => {
@@ -637,7 +637,7 @@ const EnhancedValidationDisplay = () => {
               <Download className="w-4 h-4" />
               Export Valid ({validCount})
             </Button>
-          )}
+          )} */}
         </div>
       </div>
     </div>
