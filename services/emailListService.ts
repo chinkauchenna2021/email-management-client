@@ -49,6 +49,7 @@ import { api } from '@/lib/api';
 //     return response.data;
 //   }
 // };
+// services/emailListService.ts - Updated version
 
 
 export const EmailListService = {
@@ -73,12 +74,12 @@ export const EmailListService = {
   },
 
   async getEmailListWithStats(listId: string) {
-    const response = await api.get(`/email/lists/${listId}`);
+    const response = await api.get(`/email/lists/${listId}/stats`);
     return response.data;
   },
 
   async getAllEmailListsWithStats() {
-    const response = await api.get('/email/lists');
+    const response = await api.get('/email/lists/stats');
     return response.data;
   },
 

@@ -171,6 +171,28 @@ const handleEmailInput = async (value: string) => {
   }
 };
 
+
+// Add this useEffect in your EmailLists component
+useEffect(() => {
+  let isMounted = true;
+  
+  const loadData = async () => {
+    if (isMounted) {
+      try {
+        await fetchEmailLists();
+      } catch (error) {
+        console.error('Failed to fetch email lists:', error);
+      }
+    }
+  };
+  
+  loadData();
+  
+  return () => {
+    isMounted = false;
+  };
+}, [fetchEmailLists]);
+
 // Enhanced validation display component
 // const EnhancedValidationDisplay = () => {
 //   const emails = bulkEmails
@@ -718,66 +740,117 @@ const EnhancedValidationDisplay = () => {
     }
   };
 
-  // Process uploaded file
-  const processFile = (selectedFile: File) => {
-    setIsProcessingFile(true);
-    setFileProcessingProgress(0);
 
-    const reader = new FileReader();
 
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      // Extract emails from file content (handle both CSV and plain text)
-      let emails: string[] = [];
+// Add this debug useEffect
+useEffect(() => {
+  if (currentStep === 2 && isModalOpen) {
+    const emailsFromTextarea = bulkEmails
+      .split(/[,\s\n]+/)
+      .filter((email) => email.trim() !== '');
+    
+    const validEmailsFromTextarea = emailsFromTextarea.filter(email => 
+      validationResults[email]?.isValid
+    );
+    
+    console.log('Debug - Email Validation State:');
+    console.log('Total emails in textarea:', emailsFromTextarea);
+    console.log('Validation results:', validationResults);
+    console.log('Valid emails found:', validEmailsFromTextarea);
+    console.log('File emails:', fileEmails);
+    console.log('File validation results:', fileValidationResults);
+  }
+}, [bulkEmails, validationResults, fileEmails, fileValidationResults, currentStep, isModalOpen]);
 
-      if (selectedFile.name.endsWith(".csv")) {
-        // Simple CSV parsing - assuming emails are in the first column
-        const lines = content.split("\n");
-        emails = lines
-          .slice(1) // Skip header row
-          .map((line) => line.split(",")[0].trim()) // Get first column
-          .filter((email) => email !== "");
-      } else {
-        // Plain text file - one email per line
-        emails = content
-          .split(/[,\s\n]+/)
-          .filter((email) => email.trim() !== "");
+
+
+
+
+
+// Add this helper function
+const basicEmailValidation = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
+// Update the handleCombinedSubmit to include fallback validation
+const getValidEmails = () => {
+  if (fileEmails.length > 0 && file) {
+    return fileValidationResults
+      .filter((r) => r.status === "valid")
+      .map((r) => r.email);
+  } else {
+    const emailsFromTextarea = bulkEmails
+      .split(/[,\s\n]+/)
+      .filter((email) => email.trim() !== '');
+    
+    // Use validation results first, fallback to basic validation
+    return emailsFromTextarea.filter(email => {
+      const validationResult = validationResults[email];
+      if (validationResult) {
+        return validationResult.isValid;
       }
+      // Fallback to basic validation if async validation hasn't completed
+      return basicEmailValidation(email);
+    });
+  }
+};
 
-      setFileEmails(emails);
+// Then use getValidEmails() in your handleCombinedSubmit
 
-      // Validate emails with progress simulation
-      const totalEmails = emails.length;
-      let processed = 0;
+const parseEmailsFromText = (text: string): string[] => {
+  return text
+    .split(/[,\s\n]+/)
+    .map(email => email.trim())
+    .filter(email => {
+      // Basic email format check
+      return email !== '' && email.includes('@') && email.includes('.');
+    });
+};
 
-      const validationInterval = setInterval(() => {
-        if (processed >= totalEmails) {
-          clearInterval(validationInterval);
-          setIsProcessingFile(false);
-          return;
-        }
 
-        // Process in batches for better performance
-        const batchSize = Math.min(100, totalEmails - processed);
-        const batch = emails.slice(processed, processed + batchSize);
 
-        const batchResults = batch.map((email) => {
-          const validation = validateEmail(email.trim()) as any;
-          return {
-            email: email.trim(),
-            status: validation.status,
-            error: validation.error,
-          };
-        });
 
-        setFileValidationResults((prev) => [...prev, ...batchResults]);
-        processed += batchSize;
-        setFileProcessingProgress(Math.round((processed / totalEmails) * 100));
-      }, 50);
-    };
+  // Process uploaded file
+// Process uploaded file
+const processFile = async (selectedFile: File) => {
+  setIsProcessingFile(true);
+  setFileProcessingProgress(0);
 
-    reader.readAsText(selectedFile);
+  const reader = new FileReader();
+
+  reader.onload = async (e) => {
+    const content = e.target?.result as string;
+    // Extract emails from file content (handle both CSV and plain text)
+    let emails: string[] = [];
+
+    if (selectedFile.name.endsWith(".csv")) {
+      // Simple CSV parsing - assuming emails are in the first column
+      const lines = content.split("\n");
+      emails = lines
+        .slice(1) // Skip header row
+        .map((line) => line.split(",")[0]?.trim()) // Get first column
+        .filter((email) => email && email !== "");
+    } else {
+      // Plain text file - one email per line
+      emails = content
+        .split(/[,\s\n]+/)
+        .filter((email) => email.trim() !== "");
+    }
+
+    setFileEmails(emails);
+
+    // Use the new validation system for file emails
+    if (emails.length > 0) {
+      await validateBatch(emails);
+    }
+
+    setIsProcessingFile(false);
+    setFileProcessingProgress(100);
   };
+
+  reader.readAsText(selectedFile);
+};
 
   // Handle combined submission (create list and upload emails)
   // const handleCombinedSubmit = async () => {
@@ -860,32 +933,46 @@ const EnhancedValidationDisplay = () => {
   //   }
   // };
 
+// In your EmailLists component - Update the handleCombinedSubmit function
 const handleCombinedSubmit = async () => {
   if (currentStep === 1) {
-    // Validate list name and description
     if (!newListName.trim()) {
       toast("Please enter a name for the email list.");
       return;
     }
-    // Move to next step
     setCurrentStep(2);
   } else {
-    // Handle email upload and validation
     setIsValidating(true);
     setValidationProgress(0);
 
     try {
-      // Determine which emails to upload (from textarea or file)
-      const emailsToUpload =
-        fileEmails.length > 0
-          ? fileEmails.filter(
-              (email) =>
-                fileValidationResults.find((r) => r.email === email)
-                  ?.status === "valid"
-            )
-          : emailValidationResults
-              .filter((r) => r.status === "valid")
-              .map((r) => r.email);
+      // Get valid emails from the current active source
+      let emailsToUpload: string[] = [];
+      
+      if (fileEmails.length > 0 && file) {
+        // Using file upload
+        emailsToUpload = fileValidationResults
+          .filter((r) => r.status === "valid")
+          .map((r) => r.email);
+      } else {
+        // Using textarea - use the new validation system
+        const emailsFromTextarea = bulkEmails
+          .split(/[,\s\n]+/)
+          .filter((email) => email.trim() !== '');
+        
+        emailsToUpload = emailsFromTextarea.filter(email => 
+          validationResults[email]?.isValid
+        );
+        
+        // Fallback to basic validation if async validation hasn't completed
+        if (emailsToUpload.length === 0) {
+          emailsToUpload = emailsFromTextarea.filter(email => 
+            basicEmailValidation(email)
+          );
+        }
+      }
+
+      console.log('Emails to upload:', emailsToUpload);
 
       if (emailsToUpload.length === 0) {
         toast("Please add at least one valid email address.");
@@ -893,37 +980,23 @@ const handleCombinedSubmit = async () => {
         return;
       }
 
-      // Simulate validation progress
-      const interval = setInterval(() => {
-        setValidationProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsValidating(false);
-
-            // Create the email list
-            createEmailList(newListName, newListDescription, emailsToUpload)
-              .then((newList) => {
-                console.log("List created successfully:", newList);
-                setIsModalOpen(false);
-                resetModalState();
-                
-                // Force refresh the email lists
-                fetchEmailLists().then(() => {
-                  toast(`Your email list has been created with ${emailsToUpload.length} emails.`);
-                });
-              })
-              .catch((error) => {
-                toast( error.message || "Failed to create email list");
-              });
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      // Create the email list
+      await createEmailList(newListName, newListDescription, emailsToUpload);
+      
+      // Success - close modal and reset state
+      setIsModalOpen(false);
+      resetModalState();
+      
+      // Force refresh the email lists to ensure UI is updated
+      await fetchEmailLists();
+      
+      toast(`Your email list has been created with ${emailsToUpload.length} emails.`);
       
     } catch (error: any) {
-      toast( error.message || "Failed to create email list");
+      toast(error.message || "Failed to create email list");
+    } finally {
       setIsValidating(false);
+      setValidationProgress(0);
     }
   }
 };
@@ -968,7 +1041,7 @@ const handleCombinedSubmit = async () => {
 // Handle delete with confirmation
 const handleDeleteEmailList = async (listId: string) => {
   // Find the list name for the confirmation message
-  const listToDelete = emailLists.find(list => list.id === listId);
+  const listToDelete = (emailLists as any)?.emailLists?.find((list:any) => list.id === listId);
   
   if (!confirm(`Are you sure you want to delete the email list "${listToDelete?.name}"? This action cannot be undone.`)) {
     return;
@@ -1121,11 +1194,11 @@ const handleEditEmailList = async (list: EmailList) => {
     );
   };
 
-  const filteredLists = ((emailLists as any)?.emailLists || []).filter(
-    (list: EmailList) =>
+    // Fix the data access in your component
+    const filteredLists = (emailLists || []).filter((list: EmailList) =>
       String(list?.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(list?.description).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      String(list?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   // Filter emails for the view modal
   const filteredEmails = emails.filter((email:any) =>

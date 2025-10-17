@@ -1,4 +1,4 @@
-// store/emailListStore.ts
+// store/emailListStore.ts - Updated version
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { EmailListService } from '@/services/emailListService';
@@ -9,16 +9,15 @@ export interface EmailList {
   name: string;
   description?: string;
   totalEmails: number;
-  emailCount?:number;
+  emailCount?: number;
   validEmails: number;
   invalidEmails: number;
   createdAt: string;
   updatedAt: string;
-  stats?:{
-    invalidEmails:number;
-    validEmails:number;
-    validityRate:number;
-
+  stats?: {
+    invalidEmails: number;
+    validEmails: number;
+    validityRate: number;
   }
 }
 
@@ -39,17 +38,58 @@ interface EmailListState {
   error: string | null;
   
   fetchEmailLists: () => Promise<void>;
-  createEmailList: (name: string, description?: string, emails?: string[]) => Promise<void>;
-  updateEmailList: (listId: string, updates: Partial<EmailList>) => Promise<void>;
+  createEmailList: (name: string, description?: string, emails?: string[]) => Promise<EmailList>;
+  updateEmailList: (listId: string, updates: Partial<EmailList>) => Promise<EmailList>;
   deleteEmailList: (listId: string) => Promise<void>;
-  getEmailListWithStats: (listId: string) => Promise<void>;
-  getAllEmailListsWithStats: () => Promise<void>;
-  addEmailsToList: (listId: string, emails: string[]) => Promise<void | any>;
+  getEmailListWithStats: (listId: string) => Promise<EmailList>;
+  getAllEmailListsWithStats: () => Promise<EmailList[]>;
+  addEmailsToList: (listId: string, emails: string[]) => Promise<any>;
   getEmailsInList: (listId: string, page?: number, limit?: number) => Promise<void>;
   validateEmailBatch: (emails: string[]) => Promise<any>;
   setCurrentList: (list: EmailList | null) => void;
   clearError: () => void;
 }
+
+// Helper function to normalize email list data
+const normalizeEmailList = (list: any): EmailList => {
+  if (!list) {
+    throw new Error('Email list data is null or undefined');
+  }
+
+  return {
+    id: String(list.id || ''),
+    name: String(list.name || ''),
+    description: list.description ? String(list.description) : undefined,
+    subscriberCount: Number(list.subscriberCount || list.emailCount || 0),
+    totalEmails: Number(list.totalEmails || list.emailCount || 0),
+    emailCount: Number(list.emailCount || list.totalEmails || 0),
+    validEmails: Number(list.validEmails || list.stats?.validEmails || 0),
+    invalidEmails: Number(list.invalidEmails || list.stats?.invalidEmails || 0),
+    createdAt: String(list.createdAt || ''),
+    updatedAt: String(list.updatedAt || ''),
+    stats: {
+      validEmails: Number(list.stats?.validEmails || list.validEmails || 0),
+      invalidEmails: Number(list.stats?.invalidEmails || list.invalidEmails || 0),
+      validityRate: Number(list.stats?.validityRate || 
+        (list.validEmails && list.totalEmails ? (list.validEmails / list.totalEmails) * 100 : 0))
+    }
+  };
+};
+
+const normalizeEmailLists = (lists: any[]): EmailList[] => {
+  if (!Array.isArray(lists)) {
+    return [];
+  }
+  
+  return lists.map(list => {
+    try {
+      return normalizeEmailList(list);
+    } catch (error) {
+      console.error('Error normalizing email list:', error);
+      return null;
+    }
+  }).filter(Boolean) as EmailList[];
+};
 
 export const useEmailListStore = create<EmailListState>()(
   persist(
@@ -63,59 +103,53 @@ export const useEmailListStore = create<EmailListState>()(
       fetchEmailLists: async () => {
         set({ isLoading: true, error: null });
         try {
-          const emailLists = await EmailListService.getUserEmailLists();
-          set({ emailLists, isLoading: false });
+          const response = await EmailListService.getUserEmailLists();
+          
+          // Handle different response structures
+          let listsArray: any[] = [];
+          
+          if (Array.isArray(response)) {
+            listsArray = response;
+          } else if (response && Array.isArray(response.emailLists)) {
+            listsArray = response.emailLists;
+          } else if (response && response.data && Array.isArray(response.data)) {
+            listsArray = response.data;
+          }
+          
+          const normalizedLists = normalizeEmailLists(listsArray);
+          set({ emailLists: normalizedLists, isLoading: false });
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          console.error('Error fetching email lists:', error);
+          set({ 
+            error: error.message || 'Failed to fetch email lists', 
+            isLoading: false, 
+            emailLists: [] 
+          });
         }
       },
-      // createEmailList: async (name: string, description?: string, emails: string[] = []) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     const response = await EmailListService.createEmailList(name, description, emails);
-      //     const emailList = response.emailList || response;
-      //     set((state) => ({
-      //       emailLists: [emailList, ...state.emailLists],
-      //       isLoading: false,
-      //     }));
-      //     return emailList;
-      //   } catch (error: any) {
-      //     set({ error: error.message, isLoading: false });
-      //     throw error;
-      //   }
-      // },
 
       createEmailList: async (name: string, description?: string, emails: string[] = []) => {
         set({ isLoading: true, error: null });
         try {
           const response = await EmailListService.createEmailList(name, description, emails);
           
-          // Handle different response structures
-          let emailList;
+          // Extract email list from response
+          let newListData = response;
           if (response && response.emailList) {
-            emailList = response.emailList;
+            newListData = response.emailList;
           } else if (response && response.data) {
-            emailList = response.data;
-          } else {
-            emailList = response;
+            newListData = response.data;
           }
           
-          // Ensure the emailList has the required stats structure
-          const enhancedEmailList = {
-            ...emailList,
-            stats: emailList.stats || {
-              validEmails: emails.length, // Default to all valid if not provided
-              invalidEmails: 0,
-              validityRate: 100
-            }
-          };
+          const normalizedList = normalizeEmailList(newListData);
           
-          set((state) => ({
-            emailLists: [enhancedEmailList, ...state.emailLists],
+          // Force update the email lists array - ADD TO BEGINNING for immediate visibility
+          set((state: { emailLists: any; }) => ({
+            emailLists: [normalizedList, ...state.emailLists],
             isLoading: false,
           }));
           
-          return enhancedEmailList;
+          return normalizedList;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
@@ -126,137 +160,82 @@ export const useEmailListStore = create<EmailListState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await EmailListService.updateEmailList(listId, updates);
-          const updatedList = response.emailList || response;
-          set((state) => ({
-            emailLists: state.emailLists.map(l => l.id === listId ? updatedList : l),
-            currentList: state.currentList?.id === listId ? updatedList : state.currentList,
+          
+          let updatedListData = response;
+          if (response && response.emailList) {
+            updatedListData = response.emailList;
+          } else if (response && response.data) {
+            updatedListData = response.data;
+          }
+          
+          const normalizedList = normalizeEmailList(updatedListData);
+          
+          set((state: { emailLists: any[]; currentList: { id: string; }; }) => ({
+            emailLists: state.emailLists.map(l => l.id === listId ? normalizedList : l),
+            currentList: state.currentList?.id === listId ? normalizedList : state.currentList,
             isLoading: false,
           }));
-          return updatedList;
+          
+          return normalizedList;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
         }
       },
 
-deleteEmailList: async (listId: string) => {
-  set({ isLoading: true, error: null });
-  try {
-    await EmailListService.deleteEmailList(listId);
-    set((state) => ({
-      emailLists: state.emailLists.filter(l => l.id !== listId),
-      currentList: state.currentList?.id === listId ? null : state.currentList,
-      isLoading: false,
-    }));
-  } catch (error: any) {
-    set({ error: error.message, isLoading: false });
-    throw error;
-  }
-},
+      deleteEmailList: async (listId: string) => {
+        console.log('Deleting email list:', listId);
+        set({ isLoading: true, error: null });
+        try {
+          await EmailListService.deleteEmailList(listId);
+          set((state: { emailLists: any[]; currentList: { id: string; }; }) => ({
+            emailLists: state.emailLists.filter(l => l.id !== listId),
+            currentList: state.currentList?.id === listId ? null : state.currentList,
+            isLoading: false,
+          }));
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          throw error;
+        }
+      },
 
       getEmailListWithStats: async (listId: string) => {
         set({ isLoading: true, error: null });
         try {
           const response = await EmailListService.getEmailListWithStats(listId);
-          const emailList = response.emailList || response;
-          set({ currentList: emailList, isLoading: false });
-          return emailList;
+          let listData = response;
+          if (response && response.emailList) {
+            listData = response.emailList;
+          } else if (response && response.data) {
+            listData = response.data;
+          }
+          
+          const normalizedList = normalizeEmailList(listData);
+          set({ currentList: normalizedList, isLoading: false });
+          return normalizedList;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
         }
       },
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      // fetchEmailLists: async () => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     const emailLists = await EmailListService.getUserEmailLists();
-      //     set({ emailLists, isLoading: false });
-      //   } catch (error: any) {
-      //     set({ error: error.message, isLoading: false });
-      //   }
-      // },
-
-      // createEmailList: async (name: string, description?: string, emails: string[] = []) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     const emailList = await EmailListService.createEmailList(name, description, emails);
-      //     set((state) => ({
-      //       emailLists: [emailList, ...state.emailLists],
-      //       isLoading: false,
-      //     }));
-      //     return emailList;
-      //   } catch (error: any) {
-      //     set({ error: error.message, isLoading: false });
-      //     throw error;
-      //   }
-      // },
-
-      // updateEmailList: async (listId: string, updates: Partial<EmailList>) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     const updatedList = await EmailListService.updateEmailList(listId, updates);
-      //     set((state) => ({
-      //       emailLists: state.emailLists.map(l => l.id === listId ? updatedList : l),
-      //       currentList: state.currentList?.id === listId ? updatedList : state.currentList,
-      //       isLoading: false,
-      //     }));
-      //   } catch (error: any) {
-      //     set({ error: error.message, isLoading: false });
-      //     throw error;
-      //   }
-      // },
-
-      // deleteEmailList: async (listId: string) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     await EmailListService.deleteEmailList(listId);
-      //     set((state) => ({
-      //       emailLists: state.emailLists.filter(l => l.id !== listId),
-      //       currentList: state.currentList?.id === listId ? null : state.currentList,
-      //       isLoading: false,
-      //     }));
-      //   } catch (error: any) {
-      //     set({ error: error.message, isLoading: false });
-      //     throw error;
-      //   }
-      // },
-
-      // getEmailListWithStats: async (listId: string) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     const emailList = await EmailListService.getEmailListWithStats(listId);
-      //     set({ currentList: emailList, isLoading: false });
-      //     return emailList;
-      //   } catch (error: any) {
-      //     set({ error: error.message, isLoading: false });
-      //     throw error;
-      //   }
-      // },
-
       getAllEmailListsWithStats: async () => {
         set({ isLoading: true, error: null });
         try {
-          const emailLists = await EmailListService.getAllEmailListsWithStats();
-          set({ emailLists, isLoading: false });
-          return emailLists;
+          const response = await EmailListService.getAllEmailListsWithStats();
+          let listsArray: any[] = [];
+          
+          if (Array.isArray(response)) {
+            listsArray = response;
+          } else if (response && Array.isArray(response.emailLists)) {
+            listsArray = response.emailLists;
+          } else if (response && response.data && Array.isArray(response.data)) {
+            listsArray = response.data;
+          }
+          
+          const normalizedLists = normalizeEmailLists(listsArray);
+          set({ emailLists: normalizedLists, isLoading: false });
+          return normalizedLists;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
@@ -267,12 +246,16 @@ deleteEmailList: async (listId: string) => {
         set({ isLoading: true, error: null });
         try {
           const result = await EmailListService.addEmailsToList(listId, emails);
-          set((state) => ({
-            currentList: state.currentList?.id === listId 
-              ? { ...state.currentList, totalEmails: state.currentList.totalEmails + emails.length }
-              : state.currentList,
+          
+          // Update the list stats after adding emails
+          const updatedList = await get().getEmailListWithStats(listId);
+          
+          set((state: { emailLists: any[]; currentList: { id: string; }; }) => ({
+            emailLists: state.emailLists.map(l => l.id === listId ? updatedList : l),
+            currentList: state.currentList?.id === listId ? updatedList : state.currentList,
             isLoading: false,
           }));
+          
           return result;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
@@ -284,7 +267,7 @@ deleteEmailList: async (listId: string) => {
         set({ isLoading: true, error: null });
         try {
           const result = await EmailListService.getEmailsInList(listId, page, limit);
-          set({ emails: result.emails, isLoading: false });
+          set({ emails: result.emails || [], isLoading: false });
           return result;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
@@ -316,6 +299,21 @@ deleteEmailList: async (listId: string) => {
         emailLists: state.emailLists,
         currentList: state.currentList,
       }),
+      merge: (persistedState: any, currentState: any) => {
+        const persistedLists = Array.isArray(persistedState?.emailLists) 
+          ? normalizeEmailLists(persistedState.emailLists)
+          : [];
+          
+        const persistedCurrentList = persistedState?.currentList 
+          ? normalizeEmailList(persistedState.currentList)
+          : null;
+
+        return {
+          ...currentState,
+          emailLists: persistedLists,
+          currentList: persistedCurrentList,
+        };
+      },
     }
   )
 );

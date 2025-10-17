@@ -913,7 +913,7 @@ export function Campaigns() {
     return list ? list.name : listId;
   };
 
-  const filteredCampaigns = campaigns.filter((campaign:any) => {
+  const filteredCampaigns = campaigns?.filter((campaign:any) => {
     if (!campaign) return false;
     
     const name = campaign.name || '';
