@@ -28,7 +28,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           originalRequest._retry = true;
           
           // Try to refresh token or logout
-          // logout();
+          logout();
           window.location.href = '/auth/login';
         }
         
