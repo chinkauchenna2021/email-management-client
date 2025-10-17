@@ -1,3 +1,4 @@
+'use client'
 import { RefreshCw } from "lucide-react";
 
 export default function Loading() {
