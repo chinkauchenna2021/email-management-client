@@ -39,7 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       api.interceptors.response.eject(interceptor);
     };
-  }, []);
+  }, [logout]);
 
   return <>{children}</>;
 }
