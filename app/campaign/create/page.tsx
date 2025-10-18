@@ -451,8 +451,6 @@
 
 
 
-
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -488,6 +486,7 @@ export default function SimpleCreateCampaignPage() {
     content: "",
     domainId: "",
     listId: "",
+    fromName: "", // Add fromName field
     scheduledDate: undefined as Date | undefined,
   })
 
@@ -497,7 +496,10 @@ export default function SimpleCreateCampaignPage() {
 
   // Safe data access
   const safeDomains = Array.isArray(domains) ? domains : []
-  const safeEmailLists = Array.isArray((emailLists as any).emailLists) ? (emailLists as any)?.emailLists : []
+  const safeEmailLists = Array.isArray(emailLists) ? emailLists : []
+
+  // Get selected domain to show email format hint
+  const selectedDomain = safeDomains.find(domain => domain.id === campaignData.domainId)
 
   useEffect(() => {
     if (error) {
@@ -517,6 +519,7 @@ export default function SimpleCreateCampaignPage() {
         content: campaignData.content || '<p>Your email content here</p>',
         domainId: campaignData.domainId,
         listId: campaignData.listId,
+        fromName: campaignData.fromName, // Include fromName
         scheduledAt: campaignData.scheduledDate ? campaignData.scheduledDate.toISOString() : undefined,
         saveAsDraft: !campaignData.scheduledDate,
       }
@@ -530,7 +533,7 @@ export default function SimpleCreateCampaignPage() {
           : "Your campaign has been created successfully.",
       })
       
-      router.push("/campaigns")
+      router.push("/campaign")
     } catch (error) {
       // Error is handled by the useEffect above
     }
@@ -539,474 +542,391 @@ export default function SimpleCreateCampaignPage() {
   const isFormValid = 
     campaignData.subject && 
     campaignData.domainId && 
-    campaignData.listId
+    campaignData.listId &&
+    campaignData.fromName // Make fromName required
 
   return (
     <ProtectedRoute>
-
-    <div className="container mx-auto py-6 space-y-6 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Create Email Campaign</h1>
-            <p className="text-muted-foreground">Quickly set up and send your email campaign</p>
+      <div className="container mx-auto py-6 space-y-6 max-w-4xl">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Create Email Campaign</h1>
+              <p className="text-muted-foreground">Quickly set up and send your email campaign</p>
+            </div>
           </div>
+          
+          <Button 
+            onClick={handleCreateCampaign}
+            disabled={isLoading || !isFormValid}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {isLoading ? (
+              <Clock className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            {campaignData.scheduledDate ? "Schedule" : "Create Campaign"}
+          </Button>
         </div>
-        
-        <Button 
-          onClick={handleCreateCampaign}
-          disabled={isLoading || !isFormValid}
-          className="bg-primary hover:bg-primary/90"
-        >
-          {isLoading ? (
-            <Clock className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Send className="w-4 h-4 mr-2" />
-          )}
-          {campaignData.scheduledDate ? "Schedule" : "Create Campaign"}
-        </Button>
-      </div>
 
-      {/* Main Form */}
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Campaign Details</CardTitle>
-            <CardDescription>Fill in the essential information to create your campaign</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Required Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Main Form */}
+        <div className="grid grid-cols-1 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Campaign Details</CardTitle>
+              <CardDescription>Fill in the essential information to create your campaign</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Required Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="subject" className="flex items-center">
+                    Email Subject <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <Input
+                    id="subject"
+                    placeholder="Enter your email subject line..."
+                    value={campaignData.subject}
+                    onChange={(e) => setCampaignData({ ...campaignData, subject: e.target.value })}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-3">
+                  <Label htmlFor="domain" className="flex items-center">
+                    Sending Domain <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <Select
+                    value={campaignData.domainId}
+                    onValueChange={(value) => setCampaignData({ ...campaignData, domainId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose domain" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {safeDomains.map((domain:any) => (
+                        <SelectItem key={domain.id} value={domain.id}>
+                          {domain.domain} {domain.fromEmail && `(${domain.fromEmail})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="emailList" className="flex items-center">
+                    Recipient List <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <Select
+                    value={campaignData.listId}
+                    onValueChange={(value) => setCampaignData({ ...campaignData, listId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select who will receive this email" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {safeEmailLists.map((list: any) => (
+                        <SelectItem key={list.id} value={list.id}>
+                          {list.name} ({list.validEmails || 0} subscribers)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* From Name Field */}
+                <div className="space-y-3">
+                  <Label htmlFor="fromName" className="flex items-center">
+                    From Name <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <Input
+                    id="fromName"
+                    placeholder="Your Company Name"
+                    value={campaignData.fromName}
+                    onChange={(e) => setCampaignData({ ...campaignData, fromName: e.target.value })}
+                    className="w-full"
+                  />
+                  {selectedDomain && (
+                    <p className="text-xs text-muted-foreground">
+                      Emails will appear as: "{campaignData.fromName || 'Your Name'}" from {(selectedDomain as any).fromEmail || `noreply@${selectedDomain.domain}`}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Email Content */}
               <div className="space-y-3">
-                <Label htmlFor="subject" className="flex items-center">
-                  Email Subject <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  id="subject"
-                  placeholder="Enter your email subject line..."
-                  value={campaignData.subject}
-                  onChange={(e) => setCampaignData({ ...campaignData, subject: e.target.value })}
-                  className="w-full"
+                <Label htmlFor="content">Email Content</Label>
+                <RichTextEditor
+                  content={campaignData.content}
+                  onChange={(content) => setCampaignData({ ...campaignData, content })}
+                  placeholder="Write your email content here... You can leave this empty and add content later."
+                  className="min-h-[300px]"
                 />
               </div>
-              
-              <div className="space-y-3">
-                <Label htmlFor="domain" className="flex items-center">
-                  Sending Domain <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Select
-                  value={campaignData.domainId}
-                  onValueChange={(value) => setCampaignData({ ...campaignData, domainId: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose domain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {safeDomains.map((domain) => (
-                      <SelectItem key={domain.id} value={domain.id}>
-                        {domain.domain}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="emailList" className="flex items-center">
-                Recipient List <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Select
-                value={campaignData.listId}
-                onValueChange={(value) => setCampaignData({ ...campaignData, listId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select who will receive this email" />
-                </SelectTrigger>
-                <SelectContent>
-                  {safeEmailLists.map((list: any) => (
-                    <SelectItem key={list.id} value={list.id}>
-                      {list.name} ({list.validEmails || 0} subscribers)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Email Content */}
-            <div className="space-y-3">
-              <Label htmlFor="content">Email Content</Label>
-              <RichTextEditor
-                content={campaignData.content}
-                onChange={(content) => setCampaignData({ ...campaignData, content })}
-                placeholder="Write your email content here... You can leave this empty and add content later."
-                className="min-h-[300px]"
-              />
-            </div>
-
-            {/* Schedule Option */}
-            {/* <div className="space-y-3">
-              <Label>Schedule</Label>
-              <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                  variant={!campaignData.scheduledDate ? "default" : "outline"}
-                  className="flex-1 justify-start"
-                  onClick={() => setCampaignData({ ...campaignData, scheduledDate: undefined })}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  <div className="text-left">
-                    <div className="font-medium">Send Immediately</div>
-                    <div className="text-sm text-muted-foreground">Create as draft to send now</div>
-                  </div>
-                </Button>
+              {/* Schedule Option - Keep your existing schedule section */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Delivery Schedule</Label>
                 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                    variant={campaignData.scheduledDate ? "default" : "outline"}
-                    className="flex-1 justify-start"
-                    >
-                      <CalendarIcon className="w-4 h-4 mr-2" />
-                      <div className="text-left">
-                        <div className="font-medium">Schedule for Later</div>
-                        <div className="text-sm text-muted-foreground">
-                          {campaignData.scheduledDate 
-                            ? format(campaignData.scheduledDate, "MMM d, yyyy 'at' h:mm a")
-                            : "Choose date & time"
-                          }
-                        </div>
-                      </div>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={campaignData.scheduledDate}
-                      onSelect={(date) => setCampaignData({ ...campaignData, scheduledDate: date })}
-                      initialFocus
-                    />
-                    <div className="p-3 border-t">
-                      <Input
-                        type="time"
-                        onChange={(e) => {
-                          if (campaignData.scheduledDate && e.target.value) {
-                            const [hours, minutes] = e.target.value.split(':');
-                            const newDate = new Date(campaignData.scheduledDate);
-                            newDate.setHours(parseInt(hours), parseInt(minutes));
-                            setCampaignData({ ...campaignData, scheduledDate: newDate });
-                          }
-                        }}
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div> */}
-
-
-            {/* Schedule Option */}
-            <div className="space-y-4">
-            <Label className="text-base font-semibold">Delivery Schedule</Label>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Send Immediately Option */}
-                <div
-                className={cn(
-                    "relative rounded-xl border-2 p-4 cursor-pointer transition-all duration-200 hover:shadow-md",
-                    !campaignData.scheduledDate
-                    ? "border-primary bg-primary/5 shadow-sm"
-                    : "border-border bg-card hover:border-primary/30"
-                )}
-                onClick={() => setCampaignData({ ...campaignData, scheduledDate: undefined })}
-                >
-                <div className="flex items-start space-x-3">
-                    <div className={cn(
-                    "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all",
-                    !campaignData.scheduledDate
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground/30"
-                    )}>
-                    {!campaignData.scheduledDate && (
-                        <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                    )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                        <Send className={cn(
-                        "w-4 h-4 flex-shrink-0",
-                        !campaignData.scheduledDate ? "text-primary" : "text-muted-foreground"
-                        )} />
-                        <span className={cn(
-                        "font-semibold text-sm",
-                        !campaignData.scheduledDate ? "text-primary" : "text-foreground"
-                        )}>
-                        Send Immediately
-                        </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                        Create as draft and send right away. Perfect for urgent communications.
-                    </p>
-                    </div>
-                </div>
-                
-                {/* Active indicator */}
-                {!campaignData.scheduledDate && (
-                    <div className="absolute -top-1 -right-1">
-                    <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium">
-                        Selected
-                    </div>
-                    </div>
-                )}
-                </div>
-
-                {/* Schedule for Later Option */}
-                <Popover>
-                <PopoverTrigger asChild>
-                    <div
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Send Immediately Option */}
+                  <div
                     className={cn(
-                        "relative rounded-xl border-2 p-4 cursor-pointer transition-all duration-200 hover:shadow-md",
-                        campaignData.scheduledDate
+                      "relative rounded-xl border-2 p-4 cursor-pointer transition-all duration-200 hover:shadow-md",
+                      !campaignData.scheduledDate
                         ? "border-primary bg-primary/5 shadow-sm"
                         : "border-border bg-card hover:border-primary/30"
                     )}
-                    >
-                    <div className="flex items-start space-x-3">
-                        <div className={cn(
-                        "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all",
-                        campaignData.scheduledDate
-                            ? "border-primary bg-primary"
-                            : "border-muted-foreground/30"
-                        )}>
-                        {campaignData.scheduledDate && (
-                            <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                        )}
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                            <CalendarIcon className={cn(
-                            "w-4 h-4 flex-shrink-0",
-                            campaignData.scheduledDate ? "text-primary" : "text-muted-foreground"
-                            )} />
-                            <span className={cn(
-                            "font-semibold text-sm",
-                            campaignData.scheduledDate ? "text-primary" : "text-foreground"
-                            )}>
-                            Schedule for Later
-                            </span>
-                        </div>
-                        
-                        {campaignData.scheduledDate ? (
-                            <div className="space-y-1">
-                            <p className="text-xs font-medium text-primary">
-                                {format(campaignData.scheduledDate, "EEEE, MMMM d, yyyy")}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                at {format(campaignData.scheduledDate, "h:mm a")}
-                            </p>
-                            </div>
-                        ) : (
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                            Choose specific date and time for delivery
-                            </p>
-                        )}
-                        </div>
-                    </div>
-                    
-                    {/* Active indicator */}
-                    {campaignData.scheduledDate && (
-                        <div className="absolute -top-1 -right-1">
-                        <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium">
-                            Selected
-                        </div>
-                        </div>
-                    )}
-                    </div>
-                </PopoverTrigger>
-                
-                <PopoverContent className="w-auto p-0 shadow-xl border-0 rounded-xl overflow-hidden" align="start">
-                    <div className="bg-card">
-                    <Calendar
-                        mode="single"
-                        selected={campaignData.scheduledDate}
-                        onSelect={(date) => {
-                        if (date) {
-                            // Set to 9 AM by default if no time is selected yet
-                            const defaultDate = new Date(date);
-                            if (!campaignData.scheduledDate) {
-                            defaultDate.setHours(9, 0, 0, 0);
-                            } else {
-                            defaultDate.setHours(
-                                campaignData.scheduledDate.getHours(),
-                                campaignData.scheduledDate.getMinutes(),
-                                0,
-                                0
-                            );
-                            }
-                            setCampaignData({ ...campaignData, scheduledDate: defaultDate });
-                        }
-                        }}
-                        initialFocus
-                        className="rounded-lg"
-                    />
-                    
-                    <div className="p-4 border-t bg-muted/20">
-                        <div className="space-y-3">
-                        <Label htmlFor="time-picker" className="text-sm font-medium">
-                            Select Time
-                        </Label>
-                        <div className="flex items-center space-x-3">
-                            <Input
-                            id="time-picker"
-                            type="time"
-                            value={campaignData.scheduledDate ? format(campaignData.scheduledDate, "HH:mm") : "09:00"}
-                            onChange={(e) => {
-                                if (campaignData.scheduledDate && e.target.value) {
-                                const [hours, minutes] = e.target.value.split(':');
-                                const newDate = new Date(campaignData.scheduledDate);
-                                newDate.setHours(parseInt(hours), parseInt(minutes));
-                                setCampaignData({ ...campaignData, scheduledDate: newDate });
-                                } else if (!campaignData.scheduledDate) {
-                                // If no date selected yet, use today with selected time
-                                const today = new Date();
-                                const [hours, minutes] = e.target.value.split(':');
-                                today.setHours(parseInt(hours), parseInt(minutes));
-                                setCampaignData({ ...campaignData, scheduledDate: today });
-                                }
-                            }}
-                            className="flex-1"
-                            />
-                            <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                const now = new Date();
-                                // Round to nearest 15 minutes
-                                const minutes = Math.ceil(now.getMinutes() / 15) * 15;
-                                now.setMinutes(minutes);
-                                if (minutes === 60) {
-                                now.setHours(now.getHours() + 1);
-                                now.setMinutes(0);
-                                }
-                                setCampaignData({ ...campaignData, scheduledDate: now });
-                            }}
-                            >
-                            Now
-                            </Button>
-                        </div>
-                        
-                        {campaignData.scheduledDate && (
-                            <div className="pt-2 border-t">
-                            <p className="text-xs text-muted-foreground">
-                                Scheduled for{" "}
-                                <span className="font-medium text-foreground">
-                                {format(campaignData.scheduledDate, "MMM d, yyyy 'at' h:mm a")}
-                                </span>
-                            </p>
-                            </div>
-                        )}
-                        </div>
-                    </div>
-                    </div>
-                </PopoverContent>
-                </Popover>
-            </div>
-
-            {/* Quick schedule suggestions */}
-            {campaignData.scheduledDate && (
-                <div className="flex flex-wrap gap-2 pt-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    tomorrow.setHours(9, 0, 0, 0); // 9 AM tomorrow
-                    setCampaignData({ ...campaignData, scheduledDate: tomorrow });
-                    }}
-                >
-                    Tomorrow 9 AM
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                    const monday = new Date();
-                    // Get next Monday
-                    const day = monday.getDay();
-                    const diff = day === 0 ? 1 : 8 - day;
-                    monday.setDate(monday.getDate() + diff);
-                    monday.setHours(9, 0, 0, 0); // 9 AM Monday
-                    setCampaignData({ ...campaignData, scheduledDate: monday });
-                    }}
-                >
-                    Next Monday
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() => setCampaignData({ ...campaignData, scheduledDate: undefined })}
-                >
-                    Clear Schedule
-                </Button>
-                </div>
-            )}
-            </div>
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className={cn(
+                        "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all",
+                        !campaignData.scheduledDate
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground/30"
+                      )}>
+                        {!campaignData.scheduledDate && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Send className={cn(
+                            "w-4 h-4 flex-shrink-0",
+                            !campaignData.scheduledDate ? "text-primary" : "text-muted-foreground"
+                          )} />
+                          <span className={cn(
+                            "font-semibold text-sm",
+                            !campaignData.scheduledDate ? "text-primary" : "text-foreground"
+                          )}>
+                            Send Immediately
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Create as draft and send right away. Perfect for urgent communications.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {!campaignData.scheduledDate && (
+                      <div className="absolute -top-1 -right-1">
+                        <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium">
+                          Selected
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-            {/* Quick Actions */}
-            <div className="flex justify-between pt-4 border-t">
-              <Button 
-                variant="outline" 
-                onClick={() => router.push("/campaigns")}
-              >
-                Cancel
-              </Button>
-              
-              <div className="flex gap-2">
+                  {/* Schedule for Later Option */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div
+                        className={cn(
+                          "relative rounded-xl border-2 p-4 cursor-pointer transition-all duration-200 hover:shadow-md",
+                          campaignData.scheduledDate
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border bg-card hover:border-primary/30"
+                        )}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className={cn(
+                            "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all",
+                            campaignData.scheduledDate
+                              ? "border-primary bg-primary"
+                              : "border-muted-foreground/30"
+                          )}>
+                            {campaignData.scheduledDate && (
+                              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                            )}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <CalendarIcon className={cn(
+                                "w-4 h-4 flex-shrink-0",
+                                campaignData.scheduledDate ? "text-primary" : "text-muted-foreground"
+                              )} />
+                              <span className={cn(
+                                "font-semibold text-sm",
+                                campaignData.scheduledDate ? "text-primary" : "text-foreground"
+                              )}>
+                                Schedule for Later
+                              </span>
+                            </div>
+                            
+                            {campaignData.scheduledDate ? (
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-primary">
+                                  {format(campaignData.scheduledDate, "EEEE, MMMM d, yyyy")}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  at {format(campaignData.scheduledDate, "h:mm a")}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                Choose specific date and time for delivery
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {campaignData.scheduledDate && (
+                          <div className="absolute -top-1 -right-1">
+                            <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium">
+                              Selected
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </PopoverTrigger>
+                    
+                    <PopoverContent className="w-auto p-0 shadow-xl border-0 rounded-xl overflow-hidden" align="start">
+                      <div className="bg-card">
+                        <Calendar
+                          mode="single"
+                          selected={campaignData.scheduledDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              const defaultDate = new Date(date);
+                              if (!campaignData.scheduledDate) {
+                                defaultDate.setHours(9, 0, 0, 0);
+                              } else {
+                                defaultDate.setHours(
+                                  campaignData.scheduledDate.getHours(),
+                                  campaignData.scheduledDate.getMinutes(),
+                                  0,
+                                  0
+                                );
+                              }
+                              setCampaignData({ ...campaignData, scheduledDate: defaultDate });
+                            }
+                          }}
+                          initialFocus
+                          className="rounded-lg"
+                        />
+                        
+                        <div className="p-4 border-t bg-muted/20">
+                          <div className="space-y-3">
+                            <Label htmlFor="time-picker" className="text-sm font-medium">
+                              Select Time
+                            </Label>
+                            <div className="flex items-center space-x-3">
+                              <Input
+                                id="time-picker"
+                                type="time"
+                                value={campaignData.scheduledDate ? format(campaignData.scheduledDate, "HH:mm") : "09:00"}
+                                onChange={(e) => {
+                                  if (campaignData.scheduledDate && e.target.value) {
+                                    const [hours, minutes] = e.target.value.split(':');
+                                    const newDate = new Date(campaignData.scheduledDate);
+                                    newDate.setHours(parseInt(hours), parseInt(minutes));
+                                    setCampaignData({ ...campaignData, scheduledDate: newDate });
+                                  } else if (!campaignData.scheduledDate) {
+                                    const today = new Date();
+                                    const [hours, minutes] = e.target.value.split(':');
+                                    today.setHours(parseInt(hours), parseInt(minutes));
+                                    setCampaignData({ ...campaignData, scheduledDate: today });
+                                  }
+                                }}
+                                className="flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const now = new Date();
+                                  const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+                                  now.setMinutes(minutes);
+                                  if (minutes === 60) {
+                                    now.setHours(now.getHours() + 1);
+                                    now.setMinutes(0);
+                                  }
+                                  setCampaignData({ ...campaignData, scheduledDate: now });
+                                }}
+                              >
+                                Now
+                              </Button>
+                            </div>
+                            
+                            {campaignData.scheduledDate && (
+                              <div className="pt-2 border-t">
+                                <p className="text-xs text-muted-foreground">
+                                  Scheduled for{" "}
+                                  <span className="font-medium text-foreground">
+                                    {format(campaignData.scheduledDate, "MMM d, yyyy 'at' h:mm a")}
+                                  </span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex justify-between pt-4 border-t">
                 <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setCampaignData({
-                      subject: "",
-                      content: "",
-                      domainId: "",
-                      listId: "",
-                      scheduledDate: undefined,
-                    })
-                  }}
+                  variant="outline" 
+                  onClick={() => router.push("/campaigns")}
                 >
-                  Clear
+                  Cancel
                 </Button>
                 
-                <Button 
-                  onClick={handleCreateCampaign}
-                  disabled={isLoading || !isFormValid}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {isLoading ? (
-                    <Clock className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4 mr-2" />
-                  )}
-                  {campaignData.scheduledDate ? "Schedule Campaign" : "Create Campaign"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setCampaignData({
+                        subject: "",
+                        content: "",
+                        domainId: "",
+                        listId: "",
+                        fromName: "",
+                        scheduledDate: undefined,
+                      })
+                    }}
+                  >
+                    Clear
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleCreateCampaign}
+                    disabled={isLoading || !isFormValid}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    {isLoading ? (
+                      <Clock className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4 mr-2" />
+                    )}
+                    {campaignData.scheduledDate ? "Schedule Campaign" : "Create Campaign"}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
-  </ProtectedRoute>
+    </ProtectedRoute>
   )
 }

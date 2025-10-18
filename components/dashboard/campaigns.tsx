@@ -834,6 +834,7 @@ export function Campaigns() {
             content: campaign.content,
             domainId: campaign.domainId,
             listId: campaign.listId,
+            fromName: campaign.fromName,
             templateId: campaign.templateId,
             status: 'DRAFT' as const,
           };

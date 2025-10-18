@@ -33,6 +33,7 @@ export interface CreateCampaignData {
   domainId: string;
   listId: string;
   templateId?: string;
+  fromName: string;
   scheduledAt?: string;
   status: 'DRAFT' | 'READY' | 'SCHEDULED';
   saveAsDraft?: boolean;
@@ -69,6 +70,7 @@ export const CampaignService = {
       content: campaignData.content || '<p>Your email content here</p>',
       domainId: campaignData.domainId,
       listId: campaignData.listId,
+      fromName: campaignData.fromName,
       templateId: campaignData.templateId,
       scheduledAt: campaignData.scheduledAt,
       saveAsDraft: campaignData.status === 'DRAFT' || !campaignData.scheduledAt
