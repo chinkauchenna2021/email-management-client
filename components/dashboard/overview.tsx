@@ -1,21 +1,57 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
-import { Mail, Send, Globe, Eye, MousePointer, TrendingUp, TrendingDown, X, CheckCircle2, Users, List, Settings } from "lucide-react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from "recharts";
+import {
+  Mail,
+  Send,
+  Globe,
+  Eye,
+  MousePointer,
+  TrendingUp,
+  TrendingDown,
+  X,
+  CheckCircle2,
+  Users,
+  List,
+  Settings,
+} from "lucide-react";
 
 // Import our hooks
-import { 
-  useOverviewStats, 
-  useOverviewPerformance, 
-  useOverviewDomains, 
-  useRecentCampaigns 
-} from "@/hooks/useOverview"
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, AwaitedReactNode, Key, useEffect, useState } from "react"
-import { useCampaignStore } from "@/store/campaignStore"
+import {
+  useOverviewStats,
+  useOverviewPerformance,
+  useOverviewDomains,
+  useRecentCampaigns,
+} from "@/hooks/useOverview";
+import {
+  ReactElement,
+  JSXElementConstructor,
+  ReactNode,
+  ReactPortal,
+  AwaitedReactNode,
+  Key,
+  useEffect,
+  useState,
+} from "react";
+import { useCampaignStore } from "@/store/campaignStore";
 
 // Import shadcn/ui dialog components
 import {
@@ -24,31 +60,40 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import Link from "next/link"
+} from "@/components/ui/dialog";
+import Link from "next/link";
 
 export function Overview() {
   const [showInstructions, setShowInstructions] = useState(false);
-  
+
   // Fetch data using our hooks
   const { data: stats, isLoading: statsLoading } = useOverviewStats();
-  const { data: performanceData, isLoading: performanceLoading } = useOverviewPerformance();
+  const { data: performanceData, isLoading: performanceLoading } =
+    useOverviewPerformance();
   const { data: domains, isLoading: domainsLoading } = useOverviewDomains();
-  const { data: recentCampaigns, isLoading: campaignsLoading } = useRecentCampaigns();
+  const { data: recentCampaigns, isLoading: campaignsLoading } =
+    useRecentCampaigns();
 
   const { campaigns } = useCampaignStore();
 
   // Show instructions modal on first visit
   useEffect(() => {
-    const hasSeenInstructions = localStorage.getItem('hasSeenEmailInstructions');
+    const hasSeenInstructions = localStorage.getItem(
+      "hasSeenEmailInstructions"
+    );
     if (!hasSeenInstructions) {
       setShowInstructions(true);
-      localStorage.setItem('hasSeenEmailInstructions', 'true');
+      localStorage.setItem("hasSeenEmailInstructions", "true");
     }
   }, []);
 
-  console.log(recentCampaigns, "==== recent campaigns ======" , campaignsLoading , "==== campaignsLoading ======  ")
-  
+  console.log(
+    recentCampaigns,
+    "==== recent campaigns ======",
+    campaignsLoading,
+    "==== campaignsLoading ======  "
+  );
+
   // Calculate derived values from stats
   const totalCampaigns = stats?.totalCampaigns || 0;
   const totalEmailsSent = stats?.totalSent || 0;
@@ -60,44 +105,48 @@ export function Overview() {
     {
       step: 1,
       title: "Setup Email & Domain Configuration",
-      description: "Go to the 'Email & Domain' section to configure your sending infrastructure. Here you can:",
+      description:
+        "Go to the 'Email & Domain' section to configure your sending infrastructure. Here you can:",
       icon: Settings,
       substeps: [
         {
           icon: Globe,
-          text: "Add and verify your sending domains for authentication"
+          text: "Add and verify your sending domains for authentication",
         },
         {
           icon: Users,
-          text: "Create and manage your email lists and subscriber segments"
+          text: "Create and manage your email lists and subscriber segments",
         },
         {
           icon: List,
-          text: "Configure SMTP settings or connect email service providers"
-        }
+          text: "Configure SMTP settings or connect email service providers",
+        },
       ],
-      details: "This unified section allows you to manage all your sending infrastructure and audience lists in one place, ensuring proper domain authentication and list organization before launching campaigns."
+      details:
+        "This unified section allows you to manage all your sending infrastructure and audience lists in one place, ensuring proper domain authentication and list organization before launching campaigns.",
     },
     {
       step: 2,
       title: "Create Your Campaign",
-      description: "Navigate to the Campaigns section to design and set up your email campaign. You'll be able to:",
+      description:
+        "Navigate to the Campaigns section to design and set up your email campaign. You'll be able to:",
       icon: Send,
       substeps: [
         {
           icon: Mail,
-          text: "Choose your verified domain for sending"
+          text: "Choose your verified domain for sending",
         },
         {
           icon: Users,
-          text: "Select from your organized email lists"
+          text: "Select from your organized email lists",
         },
         {
           icon: Settings,
-          text: "Design your email content and set scheduling"
-        }
+          text: "Design your email content and set scheduling",
+        },
       ],
-      details: "With your domains and lists already configured, campaign creation becomes streamlined and efficient."
+      details:
+        "With your domains and lists already configured, campaign creation becomes streamlined and efficient.",
     },
     {
       step: 3,
@@ -107,37 +156,47 @@ export function Overview() {
       substeps: [
         {
           icon: Eye,
-          text: "Monitor open rates and engagement metrics"
+          text: "Monitor open rates and engagement metrics",
         },
         {
           icon: MousePointer,
-          text: "Track click-through rates and conversions"
+          text: "Track click-through rates and conversions",
         },
         {
           icon: Globe,
-          text: "Watch domain reputation and deliverability"
-        }
+          text: "Watch domain reputation and deliverability",
+        },
       ],
-      details: "Use the analytics dashboard to optimize future campaigns based on performance data and subscriber engagement."
-    }
+      details:
+        "Use the analytics dashboard to optimize future campaigns based on performance data and subscriber engagement.",
+    },
   ];
 
   // Show loading state
-  if (statsLoading || performanceLoading || domainsLoading || campaignsLoading) {
+  if (
+    statsLoading ||
+    performanceLoading ||
+    domainsLoading ||
+    campaignsLoading
+  ) {
     return (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
-            <p className="text-muted-foreground">Monitor your email campaigns and performance</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Dashboard Overview
+            </h1>
+            <p className="text-muted-foreground">
+              Monitor your email campaigns and performance
+            </p>
           </div>
-          <Link href={'/campaign'}>
           <Button className="bg-primary hover:bg-primary/90">
-            <Send className="w-4 h-4 mr-2" />
-            New Campaign
+            <Link href="/campaign">
+              <Send className="w-4 h-4 mr-2" />
+              New Campaign
+            </Link>
           </Button>
-          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -187,7 +246,10 @@ export function Overview() {
           <CardContent>
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-4 border border-border rounded-lg"
+                >
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-muted rounded-lg animate-pulse"></div>
                     <div className="space-y-2">
@@ -216,7 +278,7 @@ export function Overview() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -225,20 +287,26 @@ export function Overview() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
-            <p className="text-muted-foreground">Monitor your email campaigns and performance</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Dashboard Overview
+            </h1>
+            <p className="text-muted-foreground">
+              Monitor your email campaigns and performance
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowInstructions(true)}
               className="text-sm"
             >
               Show Instructions
             </Button>
             <Button className="bg-primary hover:bg-primary/90">
-              <Send className="w-4 h-4 mr-2" />
-              New Campaign
+              <Link href="/campaign">
+                <Send className="w-4 h-4 mr-2" />
+                New Campaign
+              </Link>
             </Button>
           </div>
         </div>
@@ -247,14 +315,16 @@ export function Overview() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Campaigns
+              </CardTitle>
               <Send className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{(campaigns || []).length}</div>
-              <p className="text-xs text-muted-foreground">
-                from last month
-              </p>
+              <div className="text-2xl font-bold">
+                {(campaigns || []).length}
+              </div>
+              <p className="text-xs text-muted-foreground">from last month</p>
             </CardContent>
           </Card>
 
@@ -265,14 +335,11 @@ export function Overview() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {totalEmailsSent >= 1000000 
-                  ? `${(totalEmailsSent / 1000000).toFixed(1)}M` 
-                  : totalEmailsSent.toLocaleString()
-                }
+                {totalEmailsSent >= 1000000
+                  ? `${(totalEmailsSent / 1000000).toFixed(1)}M`
+                  : totalEmailsSent.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">
-                from last month
-              </p>
+              <p className="text-xs text-muted-foreground">from last month</p>
             </CardContent>
           </Card>
 
@@ -283,9 +350,7 @@ export function Overview() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{avgOpenRate}%</div>
-              <p className="text-xs text-muted-foreground">
-                from last month
-              </p>
+              <p className="text-xs text-muted-foreground">from last month</p>
             </CardContent>
           </Card>
 
@@ -296,9 +361,7 @@ export function Overview() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{avgClickRate}%</div>
-              <p className="text-xs text-muted-foreground">
-                from last month
-              </p>
+              <p className="text-xs text-muted-foreground">from last month</p>
             </CardContent>
           </Card>
         </div>
@@ -308,12 +371,17 @@ export function Overview() {
           <Card>
             <CardHeader>
               <CardTitle>Campaign Performance</CardTitle>
-              <CardDescription>Email metrics over the last 6 months</CardDescription>
+              <CardDescription>
+                Email metrics over the last 6 months
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                  />
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip
@@ -355,32 +423,61 @@ export function Overview() {
           <Card>
             <CardHeader>
               <CardTitle>Domain Health</CardTitle>
-              <CardDescription>Deliverability status of your domains</CardDescription>
+              <CardDescription>
+                Deliverability status of your domains
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {domains?.map((domain: { domain: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined ; reputation: number | null | undefined | any}, index: Key | null | undefined | any) => (
-                <div key={index} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-medium">{domain.domain}</span>
-                    </div>
-                    <Badge 
-                      variant="secondary" 
-                      className={
-                        Number(domain?.reputation) > 80 
-                          ? "bg-green-500/10 text-green-500" 
-                          : Number(domain?.reputation) > 60 
-                            ? "bg-yellow-500/10 text-yellow-500" 
+              {domains?.map(
+                (
+                  domain: {
+                    domain:
+                      | string
+                      | number
+                      | bigint
+                      | boolean
+                      | ReactElement<any, string | JSXElementConstructor<any>>
+                      | Iterable<ReactNode>
+                      | ReactPortal
+                      | Promise<AwaitedReactNode>
+                      | null
+                      | undefined;
+                    reputation: number | null | undefined | any;
+                  },
+                  index: Key | null | undefined | any
+                ) => (
+                  <div key={index} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Globe className="w-4 h-4 text-green-500" />
+                        <span className="text-sm font-medium">
+                          {domain.domain}
+                        </span>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          Number(domain?.reputation) > 80
+                            ? "bg-green-500/10 text-green-500"
+                            : Number(domain?.reputation) > 60
+                            ? "bg-yellow-500/10 text-yellow-500"
                             : "bg-red-500/10 text-red-500"
-                      }
-                    >
-                      {Number(domain?.reputation) > 80 ? "Excellent" : Number(domain?.reputation) > 60 ? "Good" : "Needs Attention"}
-                    </Badge>
+                        }
+                      >
+                        {Number(domain?.reputation) > 80
+                          ? "Excellent"
+                          : Number(domain?.reputation) > 60
+                          ? "Good"
+                          : "Needs Attention"}
+                      </Badge>
+                    </div>
+                    <Progress
+                      value={Number(domain?.reputation)}
+                      className="h-2"
+                    />
                   </div>
-                  <Progress value={Number(domain?.reputation)} className="h-2" />
-                </div>
-              ))}
+                )
+              )}
             </CardContent>
           </Card>
         </div>
@@ -420,7 +517,7 @@ export function Overview() {
                       <IconComponent className="w-6 h-6 text-primary" />
                       <h3 className="text-xl font-semibold">{step.title}</h3>
                     </div>
-                    
+
                     <p className="text-muted-foreground leading-relaxed mb-4">
                       {step.description}
                     </p>
@@ -430,7 +527,10 @@ export function Overview() {
                       {step.substeps.map((substep, subIndex) => {
                         const SubIconComponent = substep.icon;
                         return (
-                          <div key={subIndex} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                          <div
+                            key={subIndex}
+                            className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg"
+                          >
                             <SubIconComponent className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                             <span className="text-sm">{substep.text}</span>
                           </div>
@@ -456,17 +556,20 @@ export function Overview() {
               <div>
                 <p className="text-sm font-medium">Best Practices</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  • Always verify your domains before sending campaigns<br/>
-                  • Segment your email lists for better targeting<br/>
-                  • Monitor domain reputation regularly<br/>
-                  • Use custom SMTP for advanced configurations or Resend/Mailtrap for simplicity
+                  • Always verify your domains before sending campaigns
+                  <br />
+                  • Segment your email lists for better targeting
+                  <br />
+                  • Monitor domain reputation regularly
+                  <br />• Use custom SMTP for advanced configurations or
+                  Resend/Mailtrap for simplicity
                 </p>
               </div>
             </div>
           </div>
 
           <div className="flex justify-end pt-4">
-            <Button 
+            <Button
               onClick={() => setShowInstructions(false)}
               className="bg-primary hover:bg-primary/90"
             >
@@ -476,5 +579,5 @@ export function Overview() {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
