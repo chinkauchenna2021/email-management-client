@@ -191,12 +191,12 @@ export function Overview() {
               Monitor your email campaigns and performance
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
-            <Link href="/campaign">
+            <Link href="/campaign/create">
+             <Button className="bg-primary hover:bg-primary/90">
               <Send className="w-4 h-4 mr-2" />
               New Campaign
+              </Button>
             </Link>
-          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -302,12 +302,12 @@ export function Overview() {
             >
               Show Instructions
             </Button>
+              <Link href="/campaign/create">
             <Button className="bg-primary hover:bg-primary/90">
-              <Link href="/campaign">
                 <Send className="w-4 h-4 mr-2" />
                 New Campaign
-              </Link>
             </Button>
+              </Link>
           </div>
         </div>
 

@@ -1098,9 +1098,9 @@ function EmailManagementDashboard() {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          {/* <Button variant="ghost" className="h-8 w-8 p-0"> */}
                             <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          {/* </Button> */}
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="z-50">
                           <DropdownMenuItem onClick={() => handleViewEmailList(list.id)}>
@@ -1536,9 +1536,9 @@ function EmailManagementDashboard() {
                           <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                {/* <Button variant="ghost" className="h-8 w-8 p-0"> */}
                                   <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                                {/* </Button> */}
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => navigator.clipboard.writeText(email.address)}>
