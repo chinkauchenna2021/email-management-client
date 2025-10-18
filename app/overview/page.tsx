@@ -23,14 +23,6 @@ export default function DashboardPage() {
       const [activeSection, setActiveSection] = useState("/overview")
       const router = useRouter()
       const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
-      console.log(token , isAuthenticated)
-      useEffect(()=>{
-        if(!isAuthenticated){
-          router.push('/auth/login')
-          return
-        }
-    
-      },[])
   useEffect(() => {
     // Fetch initial data
     fetchDomains();
@@ -42,11 +34,14 @@ export default function DashboardPage() {
   }, []);
 
   return (
+     <ProtectedRoute>
+
       <div className="flex h-screen bg-background">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
         <main className="flex-1 overflow-auto">
             <div className="p-6"> <Overview /></div>
         </main>
       </div>
+     </ProtectedRoute>
   );
 }

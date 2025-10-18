@@ -13,15 +13,6 @@ export default function TemplatesPage() {
       const { token, isAuthenticated, logout } = useAuthStore();
       const [activeSection, setActiveSection] = useState("/templates")
       const router = useRouter()
-      const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
-      console.log(token , isAuthenticated)
-      useEffect(()=>{
-        if(!isAuthenticated){
-          router.push('/auth/login')
-          return
-        }
-    
-      },[])
   const handleSelectTemplate = (template: any) => {
     console.log("[v0] Template selected:", template)
     // Store template in localStorage or state management
@@ -31,6 +22,8 @@ export default function TemplatesPage() {
   }
 
   return (
+     <ProtectedRoute>
+
     <div className="min-h-screen bg-background dark">
         <div className="flex h-screen bg-background">
             <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
@@ -39,5 +32,6 @@ export default function TemplatesPage() {
             </main>
           </div>
     </div>
+     </ProtectedRoute>
   )
 }

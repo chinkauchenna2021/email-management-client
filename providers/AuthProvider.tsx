@@ -26,8 +26,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
-          
-          // Try to refresh token or logout
           logout();
           window.location.href = '/auth/login';
         }

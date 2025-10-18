@@ -21,6 +21,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   initialize: () => void;
+  setLoading: (loading: boolean) => void;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -31,16 +32,18 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true, // Start as true to indicate initial loading
       error: null,
 
       initialize: () => {
         const { token, user } = get();
         if (token && user) {
-          // Set default axios header
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         }
+        set({ isLoading: false }); // Mark initialization as complete
       },
+
+      setLoading: (loading: boolean) => set({ isLoading: loading }),
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -52,7 +55,6 @@ export const useAuthStore = create<AuthState>()(
 
           const { user, token } = response.data;
 
-          // Set axios default header
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
           set({
@@ -82,7 +84,6 @@ export const useAuthStore = create<AuthState>()(
           
           const { user, token } = response.data;
           
-          // Set axios default header
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
           set({
@@ -102,12 +103,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        // Clear axios header
         delete axios.defaults.headers.common['Authorization'];
         set({
           user: null,
           token: null,
           isAuthenticated: false,
+          isLoading: false,
         });
       },
 
@@ -122,9 +123,11 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state?.token) {
-          // Restore axios header on rehydrate
-          axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+        if (state) {
+          state.isLoading = true; // Set loading true during rehydration
+          if (state.token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+          }
         }
       },
     }

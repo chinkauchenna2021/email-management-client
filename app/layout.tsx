@@ -7,7 +7,6 @@ import "./globals.css"
 import { Suspense } from "react"
 import { AuthProvider } from "@/providers/AuthProvider"
 import { QueryProvider } from '@/providers/query-provider'
-import { Sidebar } from "@/components/layout/sidebar"
  import { ToastContainer , Bounce} from 'react-toastify';
 
 export const metadata: Metadata = {
@@ -25,8 +24,8 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <Suspense>
-           {/* <AuthProvider > */}
             <QueryProvider>
+           <AuthProvider >
                {children}
                <ToastContainer
                 position="top-right"
@@ -41,8 +40,8 @@ export default function RootLayout({
                 theme="light"
                 transition={Bounce}
                 />
+           </AuthProvider>
             </QueryProvider>
-           {/* </AuthProvider> */}
           <Analytics />
         </Suspense>
       </body>

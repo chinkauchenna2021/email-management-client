@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,14 +18,14 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login, isLoading, error, clearError , token , user, isAuthenticated  } = useAuthStore();
+  const { login, isLoading, error, clearError, token, user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   
-  if(!isAuthenticated){
-      router.push("/auth/login")
-      return
-  }
-  console.log(token ,user ,isAuthenticated,  "==============token=======")
+  // Remove the redirect logic from here - this was causing the issue
+  // The ProtectedRoute component should handle redirection
+  
+  console.log(token, user, isAuthenticated, "==============token=======");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
@@ -34,7 +34,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       await login(email, password);
       router.push('/');
     } catch (error) {
-      // Error is handled in the store
       console.error('Login failed:', error);
     }
   };

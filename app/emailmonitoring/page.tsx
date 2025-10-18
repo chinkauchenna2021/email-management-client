@@ -10,24 +10,16 @@ import React, { useEffect, useState } from 'react'
 function EmailMonitoringPage() {
       const { token, isAuthenticated, logout } = useAuthStore();
       const [activeSection, setActiveSection] = useState("/emailmonitoring")
-      const router = useRouter()
-      const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>()
-      console.log(token , isAuthenticated)
-      useEffect(()=>{
-        if(!isAuthenticated){
-          router.push('/auth/login')
-          return
-        }
-    
-      },[])
   return (
-        
+     <ProtectedRoute>
+
   <div className="flex h-screen bg-background">
                         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
                         <main className="flex-1 overflow-auto">
                             <div className="p-6">  <EmailMonitoring  /></div>
                         </main>
                       </div>
+     </ProtectedRoute>    
   )
 }
 

@@ -477,6 +477,7 @@ import { useDomainStore } from "@/store/domainStore"
 import { useEmailListStore } from "@/store/emailListStore"
 import { useCampaignStore } from "@/store/campaignStore"
 import { useToast } from "@/hooks/use-toast"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 
 export default function SimpleCreateCampaignPage() {
   const { toast } = useToast()
@@ -541,6 +542,8 @@ export default function SimpleCreateCampaignPage() {
     campaignData.listId
 
   return (
+    <ProtectedRoute>
+
     <div className="container mx-auto py-6 space-y-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -655,7 +658,7 @@ export default function SimpleCreateCampaignPage() {
             {/* <div className="space-y-3">
               <Label>Schedule</Label>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
+              <Button 
                   variant={!campaignData.scheduledDate ? "default" : "outline"}
                   className="flex-1 justify-start"
                   onClick={() => setCampaignData({ ...campaignData, scheduledDate: undefined })}
@@ -670,8 +673,8 @@ export default function SimpleCreateCampaignPage() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant={campaignData.scheduledDate ? "default" : "outline"}
-                      className="flex-1 justify-start"
+                    variant={campaignData.scheduledDate ? "default" : "outline"}
+                    className="flex-1 justify-start"
                     >
                       <CalendarIcon className="w-4 h-4 mr-2" />
                       <div className="text-left">
@@ -1004,5 +1007,6 @@ export default function SimpleCreateCampaignPage() {
         </Card>
       </div>
     </div>
+  </ProtectedRoute>
   )
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
 interface ProtectedRouteProps {
@@ -12,27 +12,39 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useAuthStore();
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
+  const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure we're on the client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
-    // Wait for store to rehydrate from localStorage
-    if (!isLoading) {
-      setIsChecking(false);
-    }
-  }, [isLoading]);
+    // Only run redirect logic after client-side initialization
+    if (!isClient || isLoading) return;
 
-  useEffect(() => {
-    if ( !isAuthenticated) {
+    // If not authenticated and not already on login page, redirect to login
+    if (!isAuthenticated && pathname !== '/auth/login') {
       router.push('/auth/login');
       return;
     }
 
-    // if (!isChecking && isAuthenticated) {
-    //   router.push('/unauthorized');
-    // }
-  }, [isAuthenticated, user, router]);
+    // If authenticated and on login page, redirect to home
+    if (isAuthenticated && pathname === '/auth/login') {
+      router.push('/');
+      return;
+    }
 
-  if (isLoading) {
+    // Role-based protection (optional)
+    if (requiredRole && user?.role !== requiredRole) {
+      router.push('/unauthorized');
+      return;
+    }
+  }, [isAuthenticated, user, router, pathname, isLoading, isClient, requiredRole]);
+
+  // Show loading while checking authentication
+  if (isLoading || !isClient) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -40,13 +52,15 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // Don't render children if not authenticated (will redirect)
   if (!isAuthenticated) {
     return null;
   }
 
-  // if (requiredRole && user?.role !== requiredRole) {
-  //   return null;
-  // }
+  // Role check
+  if (requiredRole && user?.role !== requiredRole) {
+    return null;
+  }
 
   return <>{children}</>;
 }
