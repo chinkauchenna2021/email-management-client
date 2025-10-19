@@ -336,10 +336,10 @@ function EmailManagementDashboard() {
     return (
       <div className="space-y-4">
         {/* Header with Stats and Controls */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border">
+        <div className=" p-4 border">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4 gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-400 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 Email Validation Results
               </h3>
@@ -349,7 +349,7 @@ function EmailManagementDashboard() {
             </div>
             
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-2 bg-white rounded-lg p-1 border">
+            <div className="flex items-center gap-2  rounded-lg p-1 border">
               <Button
                 variant={viewMode === 'all' ? 'default' : 'ghost'}
                 size="sm"
@@ -385,7 +385,7 @@ function EmailManagementDashboard() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                className=" h-2 rounded-full transition-all duration-500"
                 style={{ 
                   width: `${((emails.length - pendingCount) / emails.length) * 100}%` 
                 }}
@@ -429,7 +429,7 @@ function EmailManagementDashboard() {
         </div>
 
         {/* Email List */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className=" rounded-xl border border-gray-200 overflow-hidden">
           <div className="max-h-80 overflow-y-auto">
             {filteredEmails.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
@@ -460,8 +460,8 @@ function EmailManagementDashboard() {
         </div>
 
         {/* Quick Actions Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl border gap-4">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
             {pendingCount > 0 ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />

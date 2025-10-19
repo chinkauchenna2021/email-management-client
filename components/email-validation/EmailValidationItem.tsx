@@ -159,7 +159,7 @@ export function EmailValidationItem({
   return (
     <div
       className={`
-      group relative bg-zinc-900/50 border border-zinc-800 rounded-lg 
+      group relative  border  rounded-lg 
       hover:border-zinc-700 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-200
       ${showDetails ? 'shadow-lg shadow-blue-500/20 border-blue-500/30' : ''}
       ${className}
